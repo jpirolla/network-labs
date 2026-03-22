@@ -1,0 +1,39 @@
+{
+  "title": "Multiplexação & Demultiplexação Observability",
+  "tags": ["network", "tcp", "multiplexing"],
+  "timezone": "browser",
+  "refresh": "1s",
+  "schemaVersion": 36,
+  "panels": [
+    {
+      "type": "state-timeline",
+      "title": "1. A Verdadeira Demultiplexação Visual (Raio-X de Sockets)",
+      "gridPos": {"x": 0, "y": 0, "w": 24, "h": 7},
+      "targets": [{"expr": "active_connections", "legendFormat": "{{client_ip}}:{{client_port}}"}]
+    },
+    {
+      "type": "stat",
+      "title": "2. Carga Total (Multiplexação Agregada)",
+      "gridPos": {"x": 0, "y": 7, "w": 6, "h": 6},
+      "targets": [{"expr": "sum(active_connections)"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "3. Throughput de Mensagens por Fluxo Isolado",
+      "gridPos": {"x": 6, "y": 7, "w": 18, "h": 6},
+      "targets": [{"expr": "rate(messages_received_total[10s])", "legendFormat": "{{client_ip}}:{{client_port}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "4. Largura de Banda (Throughput em bytes/s)",
+      "gridPos": {"x": 0, "y": 13, "w": 12, "h": 7},
+      "targets": [{"expr": "sum(rate(bytes_received_total[10s]))"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "5. Latência de Processamento (Gargalo de I/O)",
+      "gridPos": {"x": 12, "y": 13, "w": 12, "h": 7},
+      "targets": [{"expr": "rate(message_latency_seconds_sum[10s]) / rate(message_latency_seconds_count[10s])"}]
+    }
+  ]
+}
