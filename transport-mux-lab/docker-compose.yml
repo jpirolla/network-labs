@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./server
+    tty: true
+    stdin_open: true
+    ports:
+      - "5000:5000"
+      - "8000:8000"  # Prometheus metrics port
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+  client:
+    build: ./client
+    depends_on:
+      - server
+    deploy:
+      replicas: 3  # Sobe 3 containers, mas cada um vai rodar 5 threads (15 conexões!)
