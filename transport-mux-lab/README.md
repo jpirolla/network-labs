@@ -215,7 +215,7 @@ Mostra o tempo médio de processamento
 
 
 ## Resumo das entidades
-Esse projeto revela vários mecanismos fundamentais:
+Em resumo, o fluxo de acontecimentos do projeto se divide nas entidades descritas a seguir. 
 
 ### No cliente
 * Threads geram concorrência
