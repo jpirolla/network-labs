@@ -7,7 +7,7 @@ Uma das minhas maiores dificuldades em estudar redes, em especial o protocolo TC
 ## Estrutura do projeto 
 
 ``` bash
-multiplex-demo/
+transport-mux-lab/
 ├── docker-compose.yml              # orquestra a infra
 ├── server/
 │   ├── Dockerfile                  
@@ -235,5 +235,10 @@ Em resumo, o fluxo de acontecimentos do projeto se divide nas entidades descrita
 
 
 ---
-## Referências 
-- Capítulo 3.2 — Multiplexação e Demultiplexação em Computer Networking: A Top-Down Approach
+## Referências
+
+- Kurose, J. F.; Ross, K. W.  
+  *Computer Networking: A Top-Down Approach* — Capítulo 3.2 (Multiplexação e Demultiplexação)
+
+- Python Software Foundation  
+  [socket — Low-level networking interface](https://docs.python.org/3/library/socket.html#socket.socket.accept)
