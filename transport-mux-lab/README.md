@@ -148,7 +148,7 @@ Cada conexão segue o fluxo:
 
 ## Observabilidade com Prometheus
 
-Além da visualização das conexões no terminal, queria poder medir o comportamento da rede e deixá-lo visualmente explicito (melhorar essa frase). Para isso, recorri ao Grafana e Prometheus que, apesar de ser um projeto simples, seria uma forma de utilizar ferramentas de observabilidade muito utilizadas no mercado. 
+Além da visualização das conexões no terminal, a ideia foi medir o comportamento da aplicação e torná-lo explicitamente observável. Para isso, utilizei Prometheus e Grafana, que são ferramentas amplamente utilizadas no mercado para monitoramento de sistemas distribuídos. 
 
 ### Tipos de métricas utilizadas
 
