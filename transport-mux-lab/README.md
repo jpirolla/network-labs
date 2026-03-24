@@ -1,6 +1,47 @@
 # Multiplexação e Demultiplexação na camada de Transporte
 
-Uma das minhas maiores dificuldades em estudar redes, em especial o protocolo TCP-IP/OSI, é querer entender todos os processos existentes em cada camada. Porém, isso é extremamente inviável dado a existência de inúmeros protocolos e especificidades. Dentre as minhas curiosidades uma das coisas que me pareciam simples e que eu queria conseguir compreender melhor é a o processo de multiplexação e demultiplexação na camada de transporte. 
+## Overview
+
+Este projeto tem como objetivo demonstrar, de forma prática, os conceitos de multiplexação e demultiplexação na camada de transporte, com base no modelo TCP/IP.
+
+A implementação consiste em uma aplicação cliente-servidor capaz de gerar múltiplos fluxos de comunicação simultâneos e evidenciar como esses fluxos são tratados no destino. Embora o controle real dessas operações seja realizado pelo kernel do sistema operacional, o projeto busca tornar esse comportamento observável no nível da aplicação.
+
+Além disso, foram integradas ferramentas de observabilidade para coleta e visualização de métricas em tempo real, permitindo analisar o comportamento das conexões e o fluxo de dados.
+
+### Principais aspectos abordados
+
+* Geração de múltiplos fluxos de comunicação a partir de um único host
+* Identificação de conexões por meio da tupla (IP origem, porta origem, IP destino, porta destino)
+* Uso de portas efêmeras para diferenciação de conexões
+* Concorrência no cliente por meio de múltiplas threads
+* Multiplexação de I/O no servidor utilizando `select()`
+* Monitoramento de métricas com Prometheus
+* Visualização de dados com Grafana
+
+### Painéis (Métricas e Resultados)
+
+A instrumentação do projeto reflete o comportamento do tráfego através de cinco perspectivas distintas de observabilidade:
+
+1. **Demultiplexação (Raio-X de Sockets):** Este painel de linha do tempo (*State-Timeline*) mapeia o ciclo de vida de cada conexão TCP. Os marcadores de ativação/desativação representam portas efêmeras geradas pelo host do cliente. A métrica comprova visualmente, na **Camada de Aplicação**, o resultado da demultiplexação feita pelo Sistema Operacional subjacente: o servidor Python (`server.py`) gerencia ativamente as dezenas de conexões abertas usando I/O Multiplexing, isolando corretamente o conteúdo oriundo do mesmo IP, suportado pelo mapeamento via tuplas (IP:porta).
+2. **Carga Total (Multiplexação Agregada):** Exibe o número total de conexões simultaneamente ativas (métrica `sum`). Este painel materializa o conceito físico de multiplexação de rede: dezenas de sessões geradas por variadas *threads* independentes que compartilham concorrentemente a mesma placa de rede (ou interface de loopback) para o transporte das mensagens.
+3. **Throughput de Mensagens por Fluxo Isolado:** Detalha a taxa de recebimento (mensagens/segundo usando `rate() > 0`) segmentada estritamente pela tupla de origem. A visualização confirma o sucesso da separação de contextos pelo TCP, onde rajadas de comunicação (*bursts*) de diferentes fluxos não sofrem colisão (*crosstalk*) na Camada de Aplicação. Filtros dinâmicos garantem o rastreio apenas de *sockets* em atividade perante o processo.
+4. **Largura de Banda (Throughput em bytes/s):** Ilustra o escoamento global de tráfego. Enquanto o Painel 3 foca no comportamento lógico independente ditado pelo TCP, este painel mede a utilização bruta no enlace físico da rede originada do tráfego originado por processos concorrentes.
+5. **Latência de Processamento (Gargalo de I/O e Clock Skew):** Aferida através de uma relação matemática de recebimento e *timestamps* de pacotes, este painel aprova a eficiência no processamento via um laço não bloqueante (`select()`), lidando com as requisições geradas. Adicionalmente, atua como termômetro de *Clock Skew*. Sob condições distribuídas assíncronas, flutuações e latências sub-zero ilustram a complexidade acadêmica da dessincronização inofensiva de relógios de hardware (RTC) no ecossistema de infraestrutura de containers.
+
+## Sumário
+
+* [Estrutura do projeto](#estrutura-do-projeto)
+* [Arquitetura](#arquitetura)
+* [Camada de Transporte](#camada-de-transporte)
+
+  * [Multiplexação](#multiplexação)
+  * [Demultiplexação](#demultiplexação)
+* [I/O Multiplexing com select()](#io-multiplexing-com-select)
+* [Ciclo de vida de uma conexão](#ciclo-de-vida-de-uma-conexão)
+* [Observabilidade com Prometheus](#observabilidade-com-prometheus)
+* [Visualização no Grafana](#visualização-no-grafana)
+* [Resumo das entidades](#resumo-das-entidades)
+* [Referências](#referências)
 
 
 
