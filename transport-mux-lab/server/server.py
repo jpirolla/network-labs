@@ -119,7 +119,7 @@ def main():
                 try:
                     # Receive up to 1024 bytes from client
                     # recv() blocks if there's no data (unless socket is non-blocking)
-                    # If recv() returns b'' → client disconnected
+                    # If recv() returns b'' -> client disconnected
                     data = sock.recv(1024)
                     if data:
                         addr = clients[sock]
