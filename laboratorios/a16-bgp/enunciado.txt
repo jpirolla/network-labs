@@ -1,0 +1,12 @@
+Protocolo BGP
+Condições de conclusão
+Aberto: sexta-feira, 12 jun. 2026, 00:00
+Vencimento: sexta-feira, 12 jun. 2026, 21:00
+
+1) Elaborar a rede do arquivo em anexo e configurá-la conforme a ilustração 
+
+2) Os comandos para configurá-la estão no arquivo PDF em anexo
+
+3) Finalizadas as configurações, pede-se para incluir um servidor DHCP na AS 700 e o servidor DNS na AS 800
+
+4) Solicita-se que a atividade seja enviada até o final da aula, independentemente do estágio de implementação alcançado.

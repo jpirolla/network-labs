@@ -1,0 +1,278 @@
+AULA Nº 03
+REDES DE COMPUTADORES
+Camada da Aplicação
+Os slides são baseados no livro de Redes de Computadores e a Internet de J.F Kurose e K.W. Ross
+Aula de Hoje
+⚫ Introduzimos o conceito de redes.
+⚫ Falamos de protocolos e camadas.
+⚫ Nesta aula:
+⚫ Camada da Aplicação.
+⚫ A primeira camada na pilha de cima para baixo.
+⚫ Apenas em hospedeiros finais.
+⚫ Camada não encontrada no núcleo: apenas na borda.
+⚫ E-mail
+⚫ Web
+⚫ WhatsApp
+⚫ Blockchain
+⚫ Jogos de rede multiusuário
+⚫ Streaming de videoclipes armazenados
+⚫ Telefonia via Internet
+⚫ Videoconferência em tempo real, etc.
+Exemplos de aplicações de rede
+4
+Criando uma nova aplicação
+5
+⚫ Cliente-servidor
+⚫ Peer-to-peer (P2P)
+⚫ Híbrida de cliente-servidor e P2P
+⚫ Arquitetura da aplicação é diferente de arquitetura de
+rede!
+Arquiteturas de Aplicação
+Servidor:
+• Executado em um hospedeiro.
+• Endereço IP permanente.
+Clientes:
+• Inicia a sessão com o servidor.
+• Pode ser móvel com endereço
+dinâmico.
+cliente/servidor
+Arquitetura Cliente-Servidor
+Arquitetura P2P
+• Nem sempre no servidor.
+• Hospedeiros se comunicam entre
+eles.
+• Todos oferecem serviços.
+• Auto escalabilidade.
+• Endereços intermitentes e
+dinâmicos.
+• Gerenciamento complexo.
+• BitTorrent, Skype, Blockchain etc.
+peer-peer
+Instant messaging
+• Bate-papo entre dois usuários é P2P.
+• Detecção/localização centralizada de presença:
+– usuário registra seu endereço IP com o servidor
+central quando fica on-line.
+– Catálogo de endereços.
+– usuário contata o servidor central para encontrar
+endereços IP dos vizinhos.
+Arquiteturas Híbridas
+⚫ Analogia:
+⚫ processo = casa.
+⚫ socket = porta.
+⚫ Para enviar mensagem:
+– o processo empurra a mensagem para fora da
+porta.
+– confia na infra-estrutura de transporte no outro
+lado da porta.
+Porta de Saída das Aplicações:
+Sockets
+Sockets (cont.)
+• O endereço IP é suficiente?
+• Número da porta
+– Servidor HTTP: 80
+– Servidor de Correio (SMTP): 25
+⚫ Dois tipos de protocolos:
+– Domínio público: definidos nas RFCs (Request for
+Comments).
+– Recomendados para interoperabilidade.
+Ex.: HTTP, SMTP
+– Proprietários:
+Ex.: WhatsApp
+⚫ O protocolo é parte da aplicação.
+Protocolos de Camada de Aplicação
+• Transferência confiável de dados (tolera perdas?)
+• sim: áudio.
+• não: transferência de arquivos, conteúdo em geral.
+• Temporização:
+• aplicações exigem baixos atrasos?
+• ex.: telefonia via Internet, jogos interativos.
+• Outras são elásticas, i.e. melhoram quando a banda
+disponível aumenta (e.g. FTP).
+Quais serviços uma aplicação
+necessita?
+Terminologia:
+– Página Web consiste de objetos
+– Objeto pode ser arquivo HTML, imagem JPEG, Java
+applet, arquivo de áudio,…
+– A página Web consiste de arquivo-HTML base, que inclui
+vários objetos referenciados.
+– Cada objeto é endereçado por uma URL.
+– Exemplo de URL: www.someschool.edu/someDept/pic.gif
+Nome do hospedeiro Nome do caminho
+Web e HTTP
+Modelo cliente/servidor:
+– Cliente: browser que solicita, recebe e apresenta
+objetos da Web.
+– Servidor: envia objetos em resposta a pedidos.
+•Padrões:
+– HTTP 1.0: RFC 1945
+– HTTP 1.1: RFC 2616
+– curl -I -v https://www.icmc.usp.br
+HTTP - Visão Geral
+HTTP não persistente:
+– Um objeto é enviado sobre uma conexão TCP.
+– HTTP/1.0 utiliza HTTP não persistente.
+HTTP persistente:
+– múltiplos objetos podem ser enviados sobre uma
+conexão.
+– TCP entre o cliente e o servidor.
+– HTTP/1.1: conexões persistentes em modo padrão.
+– HTTP/2.0: Google, minification, prevê futuros requests
+Tipos de conexões HTTP
+Teste com HTTP1.1 e 2.0:
+curl --http1.1 -w "HTTP1.1: %{time_total}s\n" -o /dev/null -s
+https://www.google.com
+curl --http2 -w "HTTP2: %{time_total}s\n" -o /dev/null -s
+https://www.google.com
+Tipos de conexões HTTP
+• Persistente sem paralelismo:
+• cliente emite novas requisições apenas quando a
+resposta anterior for recebida.
+• Persistente com paralelismo:
+• padrão no HTTP/1.1;
+• cliente envia requisições assim que encontra um
+objeto referenciado.
+• Requisições sequenciais na mesma conexão TCP
+• Problema: causa o problema Head of Line Blocking
+HTTP persistente
+• Uma única conexão TCP transporta várias requisições
+em paralelo
+• Requisições fora de ordem
+• Se um objeto demorar (imagem grande), outra requisição
+é atendida antes de terminar a anterior
+• Servidor responde fora de ordem
+• No HTTP 1.1, reduz-se o tempo para criar múltiplas
+conexões TCP
+HTTP com Multiplexação
+• No HTTP 1.1, cada conexão TCP lida com uma requisição
+por vez
+• Mesmo que haja várias conexões TCP (máximo de 6)
+• No HTTP 2.0, uma única conexão pode lidar com várias
+requisições ao mesmo tempo
+• Sem bloqueio
+• No HTTP 2.0, não há necessidade de múltiplas conexões
+TCP
+HTTP com e sem Multiplexação
+• HTTP/1.1 sem multiplexação, com paralelismo
+curl --http1.1 -o /dev/null -s -w "HTTP/1.1 Time:
+%{time_total}s\n" https://www.google.com
+https://www.google.com
+• HTTP/2 com multiplexação
+curl --http2 -o /dev/null -s -w "HTTP/2 Time: %{time_total}s\n"
+https://www.google.com https://www.google.com
+HTTP com e sem Multiplexação
+Tipos de Mensagens HTTP
+• Request (requisição)
+• Requisita uma página HTTP passando a URL.
+GET / HTTP/1.1
+host: www.uol.com.br
+• Response (resposta)
+• Responde a Requisição com a página solicitada.
+⚫ 200 OK: requisição bem-sucedida.
+⚫ 404 Not Found: documento não encontrado.
+Tipos de Mensagens HTTP
+nc example.com 80
+GET / HTTP/1.1
+Host: example.com
+Connection: close
+Porta 80 do HTTP
+echo -e "GET / HTTP/1.1\r\nHost:
+www.uol.com.br\r\nConnection: close\r\n\r\n" |
+openssl s_client -connect www.uol.com.br:443 -
+quiet
+Porta 443 do HTTPS
+•Servidores HTTP não possuem controle de estado.
+•Uso de cookies permite que o usuário seja monitorado.
+O que os cookies podem trazer:
+ Autorização;
+ Cartões de compra;
+ Recomendações.
+Problemas com privacidade
+•A maioria dos grandes sites Web utiliza cookies:
+– Yahoo, Amazon, etc.
+Cookies
+Cliente Servidor
+msg HTTP request
+msg resposta HTTP
++
+Set-cookie: 1678
+msg requisição HTTP
++ cookie: 1678
+msg resposta HTTP
+msg requisição HTTP
++ cookie: 1678
+msg resposta HTTP
+especificação
+do cookie
+especificação
+do cookie
+servidor
+cria o ID 1678
+para o usuário
+Cookie file
+amazon: 1678
+ebay: 8734
+arquivo Cookie
+ebay: 8734
+Cookie file
+amazon: 1678
+ebay: 8734
+Uma semana depois:
+Cookies: mantendo o estado
+Passo 1: servidor cria um cookie
+curl -c cookies.txt https://httpbin.org/cookies/set/user/joao
+O que acontece: O servidor responde com o header HTTP:
+Set-Cookie: user=joao
+A opção -c cookies.txt faz o curl salvar o cookie no
+arquivo.
+Criando um Cookie
+Passo 2: cliente envia o cookie armazenado
+curl -b cookies.txt https://httpbin.org/cookies
+O que acontece:
+A opção -b cookies.txt faz o curl ler o cookie do arquivo
+O cookie é enviado no header HTTP:
+Cookie: user=joao
+Lendo o Cookie
+Caches Web
+⚫ Cliente: especifica data
+da versão armazenada
+no pedido HTTP:
+If-modified-since: <date>
+• Servidor: resposta não
+contém objeto se a cópia
+é atualizada:
+HTTP/1.0 304 Not Modified
+Cliente Servidor
+HTTP request msg
+If-modified-since: <date>
+HTTP response
+HTTP/1.0
+304 Not Modified
+Objeto
+não
+modificado
+HTTP request msg
+If-modified-since: <date>
+HTTP response
+HTTP/1.1 200 OK
+<data>
+Objeto
+modificado
+GET condicional
+• Lê a página do Wikipedia e verifica quando foi
+modificada
+curl -I https://www.wikipedia.org
+• Pedir a página apenas se não foi modificada
+curl -I -H "If-Modified-Since: Sat, 14 Mar 2026 15:00:00 GMT"
+https://www.wikipedia.org
+HTTP/2 304 Not Modified – caso a página não foi alterada
+GET condicional com Wikipedia
+Concluindo
+Foram abordados nesta aula:
+•Camda da Aplicação
+Estes slides estão baseados na bibliografia
+Redes de computadores e a Internet de KUROSE, J. F.
+(6ª. edição)
+Na próxima aula
+•Protocolos da Camada de Aplicação

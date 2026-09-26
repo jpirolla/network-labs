@@ -1,0 +1,74 @@
+Implementação de Máscaras de Redes
+Condições de conclusão
+Aberto: terça-feira, 7 abr. 2026, 21:00
+Vencimento: terça-feira, 7 abr. 2026, 23:00
+
+Enunciado — VLSM com DHCP e DNS
+
+Implemente uma rede baseada em 192.168.1.0/24, utilizando VLSM (Variable Length Subnet Mask), ou seja, subdividindo a rede em sub-redes de tamanhos diferentes sem sobreposição de endereços.
+
+Utilize:
+
+    LAN 1: 192.168.1.0/26
+
+    LAN 2: 192.168.1.64/26
+
+    Link entre roteadores: 192.168.1.252/30
+
+🔹 Requisitos
+
+    Roteadores
+
+        Configurar IPs nas interfaces
+
+        Habilitar RIP v2:
+
+    router rip
+    version 2
+    no auto-summary
+    network 192.168.1.0
+
+    Servidor (LAN 1)
+
+        IP fixo: 192.168.1.2
+
+        Configurar DHCP e DNS
+
+    DHCP
+
+        Distribuir IP para todas as LANs
+
+        Configurar gateway e DNS
+
+        Usar ip helper-address para redes remotas
+
+    DNS
+
+        Criar um nome (ex: www.tabeladeprodutos.com.br) para o servidor da LAN 2
+
+🔹 Desafio
+
+Adicionar uma terceira rede:
+
+    LAN 3: 192.168.1.224/27
+
+⚠️ Restrição:
+
+    Não pode haver sobreposição de endereços com as demais redes
+
+    Ajustar o roteamento e DHCP para incluir essa nova rede
+
+🔹 Testes
+
+    Comunicação entre todas as redes
+
+    Clientes obtendo IP via DHCP
+
+    Resolução de nomes via DNS
+    Tabela de Produtos
+ID 	Produto 	Categoria 	Preço 	Estoque
+001 	Notebook Ultra X 	Informática 	R$ 3.499,90 	15 unidades
+002 	Mouse Sem Fio 	Acessórios 	R$ 89,90 	42 unidades
+003 	Teclado Mecânico 	Acessórios 	R$ 259,90 	4 unidades
+004 	Monitor 24" 	Periféricos 	R$ 799,90 	11 unidades
+005 	Headset Gamer 	Áudio 	R$ 199,90 	3 unidades

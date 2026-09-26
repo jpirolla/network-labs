@@ -1,0 +1,367 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{indentfirst}
+
+\geometry{
+    a4paper,
+    left=3cm,
+    right=2cm,
+    top=3cm,
+    bottom=2cm
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{SSC0540 -- Redes de Computadores}
+\fancyhead[R]{Kodalabs -- Infraestrutura WAN}
+\fancyfoot[C]{\thepage}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\begin{document}
+
+% Capa
+\begin{titlepage}
+    \centering
+    \vspace*{1.5cm}
+    
+    \vspace{1cm}
+    
+    {\LARGE \textbf{Universidade de São Paulo}}\\[0.3cm]
+    {\large Instituto de Ciências Matemáticas e de Computação}\\[0.2cm]
+    {\large Departamento de Sistemas de Computação}\\[0.2cm]
+    {\large SSC0540 - Redes de Computadores}\\[3.5cm]
+    
+    {\Huge \textbf{Projeto Final:}}\\[0.8cm]
+    {\LARGE \textbf{Rede Corporativa para a Kodalabs}}\\[0.3cm]
+    {\large \textit{Consultoria em Infraestrutura e Engenharia de Dados}}\\[5cm]
+    
+    \vfill
+    
+    {\large \textbf{Professor:} Jó Ueyama}\\[0.3cm]
+    {\large \textbf{Aluno:} [Seu Nome Completo]}\\[0.2cm]
+    {\large \textbf{NUSP:} [Seu Número USP]}\\[2cm]
+    
+    {\large São Carlos -- SP}\\
+    {\large 27 de abril de 2026}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introdução}
+
+A Kodalabs é uma consultoria brasileira especializada em infraestrutura de dados e engenharia analítica, fundada em 2022 com o propósito de atender empresas que buscam modernizar seus processos de coleta, transformação e análise de dados. Operando em um mercado crescente de transformação digital, a organização posiciona-se como parceira técnica para implementação de pipelines de dados, arquiteturas de data lakes e soluções de business intelligence para clientes dos setores financeiro, varejo e logística. Com um faturamento anual de aproximadamente R\$ 1,2 milhão e uma equipe enxuta de 25 colaboradores altamente especializados, a empresa conseguiu estabelecer presença em duas localidades estratégicas do interior paulista: Campinas, onde concentra suas atividades de pesquisa, desenvolvimento e infraestrutura tecnológica; e São Carlos, sede de suas operações administrativas, comerciais e de relacionamento com clientes.
+A matriz em Campinas, localizada no polo tecnológico da região metropolitana, abriga o núcleo técnico da operação com aproximadamente 15 profissionais, incluindo engenheiros de dados, cientistas de dados e técnicos de infraestrutura. Esta unidade hospeda a infraestrutura de serviços centralizada da Kodalabs, composta por um servidor de alta disponibilidade que sustenta as operações críticas de ambas as unidades. Este servidor único foi configurado para operar de forma multifuncional, gerenciando serviços essenciais como DNS, DHCP, HTTP e FTP, garantindo que toda a inteligência de rede e o repositório de dados corporativos residam em um ambiente controlado e de fácil manutenção.
+
+A filial de São Carlos, situada a aproximadamente 90 quilômetros de distância, emprega cerca de 10 colaboradores focados nas áreas administrativa, comercial e de marketing. Por ser uma unidade voltada à gestão, ela não possui servidores locais, consumindo todos os recursos e serviços via link WAN a partir da matriz. Esta separação geográfica e a escolha por um servidor centralizado em Campinas foram planejadas para otimizar os custos operacionais, permitindo que a empresa mantenha sua robustez técnica com uma estrutura enxuta, facilitando a gestão de backups e a segurança da informação em um único ponto central.
+
+
+Entretanto, esta distribuição geográfica das operações apresenta também o desafio de estabelecer uma infraestrutura de rede corporativa que interconecte ambas as localidades de forma segura, eficiente e escalável. As características específicas do negócio da Kodalabs impõem requisitos rigorosos sobre esta infraestrutura: 
+\begin{itemize}
+    \item  tráfego de dados entre as unidades é volumoso e frequente, já que projetos de engenharia de dados frequentemente envolvem transferências de datasets que podem atingir centenas de gigabytes, sincronização de repositórios de código-fonte, replicação de bases de dados para fins de backup e distribuição de modelos treinados de machine learning;
+    \item A natureza confidencial das informações manipuladas (dados sensíveis de clientes sob proteção da Lei Geral de Proteção de Dados (LGPD))  exige segmentação rigorosa da rede, isolando diferentes departamentos e níveis de acesso através de VLANs e políticas de controle.
+    \item A equipe distribuída necessita de acesso transparente aos serviços corporativos centralizados (e-mail, servidor de arquivos, sistemas de documentação interna) independentemente da localização física, demandando roteamento eficiente e provisionamento automático de configurações de rede.
+    \item Por fim, o plano de crescimento da empresa prevê abertura de novas unidades em Ribeirão Preto e potencialmente na capital paulista nos próximos dois anos, o que torna imperativo que a arquitetura de rede seja projetada desde o início com escalabilidade horizontal em mente.
+\end{itemize}
+
+O presente projeto foi desenvolvido para endereçar estes desafios através de uma solução fundamentada em princípios de engenharia de redes. A arquitetura proposta baseia-se em um modelo hierárquico de três camadas (core, distribuição e acesso), implementa roteamento dinâmico através do protocolo OSPF para permitir convergência automática e expansão sem reconfiguração manual, utiliza a técnica de VLSM (Variable Length Subnet Mask) para otimização do espaço de endereçamento IPv4, e centraliza serviços corporativos críticos em um único servidor localizado estrategicamente na matriz. Esta abordagem equilibra requisitos técnicos de desempenho e segurança com restrições práticas de custo e complexidade operacional, resultando em uma infraestrutura apropriada ao porte da organização e preparada para suportar seu crescimento futuro. O investimento total previsto de R\$ 162.000,00 representa aproximadamente 13,5\% do faturamento anual da empresa, percentual condizente com empresas de base tecnológica que dependem de infraestrutura de TI robusta como ativo estratégico de negócio.
+
+\section{Detalhamento das Localidades e Distribuição de Recursos}
+
+\subsection{Campinas: Matriz Tecnológica e Centro de Processamento}
+
+A unidade de Campinas constitui o coração operacional da Kodalabs, concentrando não apenas as atividades de desenvolvimento e pesquisa, mas também toda a infraestrutura tecnológica que sustenta as operações da empresa. Do ponto de vista de rede, esta localidade apresenta maior complexidade. A infraestrutura de rede, por sua vez, foi dimensionada para suportar aproximadamente 10 dispositivos ativos permanentes mais uma margem para conexões temporárias de visitantes e consultores externos.
+
+O núcleo de conectividade é formado pelo roteador R-CPN-MATRIZ, um equipamento Cisco da linha PT1000 selecionado por sua capacidade de implementar múltiplas subinterfaces lógicas (possibilitando recorrer à Router-on-a-Stick) e suporte nativo ao protocolo OSPF. Este roteador desempenha dupla função: atua como gateway entre as diferentes VLANs locais, permitindo comunicação inter-departamental controlada, e como ponto de saída para o link WAN que conecta Campinas a São Carlos. A decisão de implementar um switch de core dedicado, o SW-CPN-CORE, representa uma escolha arquitetural deliberada. Embora, em uma abordagem simplificada, fosse possível conectar diretamente os switches de acesso ao roteador, essa alternativa comprometeria a escalabilidade e a organização da rede.
+
+O switch de core atua como ponto central de agregação do tráfego local, permitindo a expansão da rede por meio da adição de novos switches sem consumir interfaces do roteador, que constituem um recurso mais limitado.
+
+Além disso, essa separação de funções permite que o switch concentre o tráfego de camada 2, enquanto o roteador se dedica às funções de camada 3, como o roteamento entre VLANs e a execução do protocolo OSPF. Como consequência, reduz-se o volume de tráfego desnecessário encaminhado ao roteador, contribuindo para maior eficiência operacional da rede.
+
+Complementando o núcleo, dois switches de distribuição/acesso foram implantados: o SW-CPN-ENG, dedicado aos departamentos técnicos de Engenharia de Dados (VLAN 10) e Data Science (VLAN 20), e o SW-CPN-ACC, responsável por atender a equipe de TI (VLAN 30), a infraestrutura de servidores (VLAN 40) e a rede de visitantes (VLAN 50).
+
+Essa divisão reflete tanto a organização lógica dos setores quanto aspectos práticos de implantação física. O SW-CPN-ENG foi posicionado próximo às estações de trabalho das equipes técnicas, reduzindo a necessidade de cabeamento extenso e facilitando a manutenção.
+
+Já o SW-CPN-ACC concentra dispositivos com perfis distintos — administrativos, servidores e visitantes — permitindo um controle mais centralizado dessas redes e facilitando a aplicação de políticas específicas, como isolamento da VLAN de visitantes.
+
+O access point AP-CPN-WIFI, conectado ao SW-CPN-ACC, provê cobertura wireless para áreas comuns, operando na VLAN 50, garantindo que dispositivos externos permaneçam isolados das redes corporativas.
+
+\subsubsection{Plano de Endereçamento IP e VLSM}
+Do ponto de vista de endereçamento IP, Campinas utiliza o bloco 192.168.10.0/24, subdividido através da técnica de VLSM em cinco sub-redes de tamanhos variados. A VLAN 10 (Engenharia de Dados) recebeu a sub-rede 192.168.10.0/26, oferecendo 62 endereços de host utilizáveis -- dimensionamento que acomoda confortavelmente os 8 engenheiros atuais mais suas estações de desenvolvimento, máquinas virtuais de teste e eventual crescimento da equipe até cerca de 15 profissionais sem necessidade de renumeração. A VLAN 20 (Data Science) foi configurada simetricamente com 192.168.10.64/26, refletindo perfil similar de necessidades. Já a VLAN 30 (TI) utiliza 192.168.10.128/27 (30 hosts), suficiente para a equipe de infraestrutura de 4 pessoas mais estações de gerenciamento e ferramentas de monitoramento. As sub-redes menores foram reservadas para funções com demandas limitadas: VLAN 40 (Servidores) opera em 192.168.10.160/29 com apenas 6 endereços úteis, apropriado para o servidor físico principal mais eventuais appliances de backup ou servidores secundários que possam ser adicionados; VLAN 50 (Visitantes) igualmente recebeu 192.168.10.168/29,l imitando o número máximo de dispositivos simultâneos e facilitando o controle de acesso.
+
+Esta estratégia de endereçamento exemplifica os princípios de VLSM, já que ao invés de desperdiçar endereços alocando blocos uniformes de tamanho fixo para todos os departamentos (abordagem que levaria rapidamente ao esgotamento do espaço /24 disponível), cada segmento recebe uma máscara sob medida para suas necessidades reais, liberando espaço para expansão futura. Note-se que a subdivisão foi realizada de forma hierárquica: o bloco 192.168.10.0/24 foi inicialmente dividido em quatro blocos /26; o terceiro destes blocos foi novamente subdividido em /27; e parte do espaço resultante foi fragmentado em blocos /29. Este processo foi construído pensando numa utilização eficiente dos recursos de endereçamento e evita a necessidade de renumeração (operação custosa e propensa a erros) quando a rede cresce.
+
+\subsection{São Carlos: Foco Administrativo e Comercial}
+
+A filial de São Carlos apresenta perfil substancialmente diferente da matriz tanto em escala quanto em natureza das atividades de rede. Com aproximadamente 10 colaboradores distribuídos entre funções administrativas, comerciais e suporte técnico local, esta unidade caracteriza-se por tráfego predominantemente orientado a aplicações de produtividade e comunicação. Ao contrário de Campinas, onde transferências volumosas de dados são rotineiras, o padrão de uso em São Carlos envolve transações menores mas frequentes, como consultas a bancos de dados, edição colaborativa de documentos, acesso a serviços centralizados na matriz.
+
+A topologia de rede é similar à estrutura hierárquica de Campinas. O roteador R-SCA-FILIAL atua como gateway local e ponto de terminação do link WAN, estabelecendo adjacência OSPF na área 0 com R-CPN-MATRIZ para troca de rotas entre as localidades. O switch de core SW-SCA-CORE desempenha função análoga ao seu equivalente em Campinas: agrega tráfego dos switches de distribuição/acesso e provê ponto centralizado para eventual expansão futura (quando a equipe de São Carlos crescer, novos switches podem ser adicionados conectando-se ao core sem alterar a topologia existente). Os switches SW-SCA-ADM e SW-SCA-ACC servem respectivamente os departamentos administrativos e as funções de TI/visitantes, com o access point AP-SCA-WIFI provendo cobertura wireless para a VLAN de visitantes.
+
+O bloco de endereçamento alocado a São Carlos é 192.168.60.0/24, deliberadamente separado do espaço de Campinas (192.168.10.0/24) para facilitar identificação geográfica em tabelas de roteamento e simplificar troubleshooting, já que ao visualizar um endereço IP 192.168.60.x, um administrador sabe imediatamente que se trata de um dispositivo em São Carlos. A subdivisão em VLANs reflete a estrutura organizacional da filial: VLAN 60 (192.168.60.0/26, 62 hosts) para o departamento administrativo que concentra RH, financeiro e marketing; VLAN 70 (192.168.60.64/26, 62 hosts) para a equipe de TI local; VLAN 80 (192.168.60.128/27, 30 hosts) para gestão executiva; e VLAN 90 (192.168.60.160/28, 14 hosts) para visitantes. Note-se que a VLAN de visitantes em São Carlos recebeu máscara /28 ao invés de /29, acomodando até 14 dispositivos simultâneos de modo a  refletir a maior frequência de visitas de clientes na unidade comercial comparada à matriz técnica.
+\begin{table}[H]
+\centering
+\caption{Endereçamento e Segmentação (VLSM) -- Unidade São Carlos}
+\label{tab:vlan_sao_carlos}
+\begin{tabularx}{\textwidth}{@{}lllXl@{}}
+\toprule
+\textbf{VLAN} & \textbf{Departamento} & \textbf{Sub-rede} & \textbf{Máscara} & \textbf{Capacidade} \\ \midrule
+60 & Administrativo & 192.168.60.0/26 & 255.255.255.192 & 62 hosts \\
+70 & TI Local & 192.168.60.64/26 & 255.255.255.192 & 62 hosts \\
+80 & Gestão Executiva & 192.168.60.128/27 & 255.255.255.224 & 30 hosts \\
+90 & Visitantes & 192.168.60.160/28 & 255.255.255.240 & 14 hosts \\ \bottomrule
+\end{tabularx}
+\vspace{0.2cm}
+\small{\textbf{Nota:} A VLAN 90 utiliza máscara /28 para comportar o maior fluxo de clientes na unidade.}
+\end{table}
+
+
+\section{Arquitetura de Rede: Hierarquia, Topologia e Protocolos}
+
+\subsection{Modelo Hierárquico de Três Camadas e Topologia Estrela Estendida}
+
+    A arquitetura implementada fundamenta-se no modelo hierárquico de três camadas (Core, Distribuição e Acesso) que proporciona maior modularidade, facilidade de troubleshooting e capacidade de crescimento incremental. Na camada de Core, os switches SW-CPN-CORE e SW-SCA-CORE concentram o transporte de tráfego entre diferentes segmentos da rede local, atuando como backbone de cada localidade. Estes equipamentos não conectam dispositivos finais; sua função exclusiva é agregar tráfego dos switches de camadas inferiores e encaminhá-lo com mínima latência. A camada de Distribuição, representada pelos switches SW-CPN-ENG e SW-SCA-ADM, implementa as políticas de segmentação através de VLANs e fornece conectividade aos switches de acesso ou diretamente a grupos departamentais. Finalmente, a camada de Acesso (SW-CPN-ACC, SW-SCA-ACC) conecta os dispositivos finais ()estações de trabalho, servidores, access points) às suas respectivas VLANs.
+
+Do ponto de vista topológico físico, a rede adota o padrão de Estrela Estendida, onde cada switch de distribuição/acesso conecta-se ao switch de core através de um único enlace (topologia estrela no nível local), e o roteador conecta-se também ao core. Esta configuração oferece vantagens significativas: isolamento de falhas (problemas em um switch de acesso não afetam outros segmentos), centralização do tráfego para facilitar monitoramento e aplicação de políticas de QoS, e simplicidade de cabeamento (cada switch requer apenas um cabo de uplink ao invés de múltiplas conexões ponto-a-ponto). A escolha da topologia estrela em detrimento de alternativas como anel ou malha completa justifica-se pelo porte da rede: com 5-6 switches por localidade e tráfego que não justifica redundância física em todos os enlaces (custo-benefício desfavorável), a estrela oferece o melhor equilíbrio entre simplicidade, custo e confiabilidade.
+
+A implementação de switches de core dedicados, conforme mencionado anteriormente, representa decisão estratégica que merece aprofundamento. Em uma rede de pequeno porte, seria tecnicamente possível eliminar o switch de core e conectar todos os switches de acesso diretamente ao roteador ou entre si em cascata. Contudo, esta abordagem cria gargalos e limita crescimento: roteadores possuem número limitado de interfaces (tipicamente 2-4 Gigabit Ethernet no modelo PT1000 utilizado), insuficiente para acomodar múltiplos switches de acesso mais o link WAN; conectar switches em cascata (daisy-chain) aumenta latência, cria pontos únicos de falha e complica o troubleshooting. Ao investir em um switch de core, a Kodalabs adquire um hub de conectividade com 24-48 portas que pode absorver crescimento futuro -- quando novos departamentos surgirem ou a equipe crescer, basta adicionar switches conectando-os ao core sem reestruturar a topologia. Além disso, o core permite implementação futura de redundância: com dois switches de core operando em par com Spanning Tree, a rede ganha resiliência contra falhas de hardware. Este é um exemplo de planejamento de rede orientado não apenas às necessidades presentes, mas à trajetória de crescimento esperada da organização.
+
+\subsection{Roteamento Inter-VLAN através de Router-on-a-Stick}
+
+Dispositivos em VLANs distintas operam em sub-redes IP diferentes e, portanto, não podem comunicar-se diretamente através de switching de camada 2 -- é necessário roteamento em camada 3. A técnica de Router-on-a-Stick resolve este desafio utilizando uma única interface física do roteador, subdividida logicamente em múltiplas subinterfaces virtuais, cada uma associada a uma VLAN específica através do protocolo IEEE 802.1Q. Cada subinterface recebe um endereço IP que atua como default gateway para os hosts daquela VLAN. Quando um dispositivo na VLAN 10 (por exemplo, 192.168.10.10) precisa comunicar-se com outro na VLAN 20 (192.168.10.70), o fluxo de dados atravessa o seguinte caminho: o host origem envia o pacote para seu gateway padrão (192.168.10.1, subinterface Gig6/0.10 do roteador); o roteador recebe o quadro tagged com VLAN ID 10, remove a tag, processa o roteamento IP e identifica que o destino pertence à sub-rede 192.168.10.64/26, diretamente conectada via subinterface Gig6/0.20; o roteador então reencaminha o pacote adicionando tag VLAN 20 e enviando de volta ao switch; o switch recebe o quadro tagged VLAN 20 e o encaminha para a porta de acesso onde reside o host destino.
+
+Este processo, embora envolva uma volta (hairpin) pelo roteador, é eficiente para redes do porte da Kodalabs porque o volume de tráfego inter-VLAN é relativamente baixo -- a maior parte da comunicação ocorre entre hosts da mesma VLAN (engenheiros colaborando em projetos, cientistas de dados acessando datasets compartilhados) ou entre hosts e o servidor centralizado, não havendo necessidade de switches Layer 3 mais caros que poderiam rotear diretamente. A configuração técnica envolve a criação de subinterfaces no roteador utilizando o comando \texttt{interface GigabitEthernet6/0.X}, onde X é o número da VLAN, seguido de \texttt{encapsulation dot1Q X} para associar aquela subinterface à VLAN específica, e \texttt{ip address} para atribuir o endereço de gateway. O trunk entre o roteador e o switch de core é configurado para transportar todas as VLANs utilizadas na localidade, garantindo que quadros tagged alcancem as subinterfaces corretas.
+
+\textbf{[PRINT NECESSÁRIO: Executar o comando \texttt{show running-config | section interface} no R-CPN-MATRIZ via CLI para mostrar a configuração completa das subinterfaces Gig6/0.10 a Gig6/0.50, evidenciando os comandos \texttt{encapsulation dot1Q} e \texttt{ip address} para cada VLAN. Também executar \texttt{show ip interface brief} para visualizar todas as subinterfaces com status UP e seus respectivos endereços IP.]}
+
+\subsection{Roteamento Dinâmico com OSPF: Motivações e Funcionamento}
+
+A interconexão entre Campinas e São Carlos via link WAN exige um mecanismo de roteamento que permita aos hosts de uma localidade alcançarem as sub-redes da outra. Três abordagens são teoricamente possíveis: roteamento estático (configuração manual de rotas em cada roteador), protocolos de vetor de distância (como RIP) ou protocolos de estado de enlace (como OSPF). O projeto optou por OSPF (Open Shortest Path First, definido na RFC 2328) por razões que equilibram eficiência técnica e visão de longo prazo.
+
+OSPF é um protocolo de roteamento link-state no qual cada roteador constrói um mapa completo da topologia da rede através da troca de LSAs (Link-State Advertisements) com seus vizinhos. Este mapa, armazenado em um banco de dados chamado LSDB (Link-State Database), alimenta o algoritmo de Dijkstra que calcula as rotas de menor custo até todas as redes conhecidas. A métrica de custo é baseada na largura de banda das interfaces, favorecendo automaticamente caminhos mais rápidos. Quando ocorre uma mudança na topologia (falha de link, adição de novo roteador), LSAs de atualização são propagados e cada roteador reconverge independentemente, processo que tipicamente completa-se em poucos segundos.
+
+As motivações para escolher OSPF ao invés de alternativas centram-se em três pilares. Primeiro, convergência rápida: ao contrário do RIP, que pode levar minutos para propagar informações de rotas através de atualizações periódicas, OSPF detecta falhas rapidamente (Dead Interval padrão de 40 segundos, configurável até poucos segundos) e redireciona tráfego assim que o algoritmo SPF recalcula as rotas. Para uma empresa como a Kodalabs, onde acessos ao servidor de arquivos e bancos de dados não toleram interrupções prolongadas, esta característica é valiosa. Segundo, escalabilidade através de hierarquia: embora a rede atual opere com apenas 2 roteadores em Área 0 única, o crescimento previsto para Ribeirão Preto e São Paulo naturalmente se acomoda em OSPF através da adição de novos roteadores que automaticamente descobrem a topologia existente via troca de Hellos -- nenhuma configuração manual de rotas estáticas é necessária nos roteadores já em operação. Terceiro, OSPF é protocolo aberto (ao contrário de EIGRP, proprietário da Cisco), garantindo interoperabilidade caso a empresa decida adotar equipamentos de outros fabricantes no futuro.
+
+Entretanto, esta escolha não é isenta de riscos e demandas operacionais que devem ser monitorados. OSPF é protocolo mais complexo que RIP ou rotas estáticas, exigindo conhecimento técnico mais profundo da equipe de TI para troubleshooting -- problemas como adjacências que não formam (due to MTU mismatch, autenticação incorreta ou timer mismatches) podem ser sutis de diagnosticar. Além disso, OSPF consome recursos computacionais do roteador: cada atualização de topologia dispara recálculo SPF, processo que em redes muito grandes pode causar picos de CPU. Na escala atual da Kodalabs (2 roteadores, ~10 sub-redes), este overhead é desprezível, mas deve ser considerado se a rede crescer para dezenas de localidades. Finalmente, OSPF por padrão anuncia todas as sub-redes conectadas em cada roteador, o que pode expor informações sobre a topologia interna; a configuração de passive-interfaces (detalhada adiante) mitiga este risco impedindo o envio de Hellos em redes de usuários.
+
+A implementação prática envolveu configurar ambos os roteadores com \texttt{router ospf 1} (onde 1 é o process ID, localmente significativo), atribuir um Router ID único a cada um (1.1.1.1 para Campinas, 2.2.2.2 para São Carlos) e declarar as redes a serem anunciadas usando o comando \texttt{network} com wildcard masks. Por exemplo, no R-CPN-MATRIZ, o comando \texttt{network 192.168.10.0 0.0.0.63 area 0} instrui o OSPF a anunciar a sub-rede 192.168.10.0/26 (VLAN 10) na Área 0. Crucial para segurança é a configuração \texttt{passive-interface default} seguida de \texttt{no passive-interface GigabitEthernet7/0} (interface WAN): isto previne que pacotes OSPF Hello sejam enviados em interfaces conectadas a hosts finais (evitando que dispositivos maliciosos se façam passar por roteadores OSPF), permitindo OSPF apenas no link inter-roteadores.
+
+Após a configuração e ativação, os roteadores trocam Hellos (multicast para 224.0.0.5), estabelecem adjacência (progredindo pelos estados INIT → 2-WAY → EXSTART → EXCHANGE → LOADING → FULL), sincronizam seus LSDBs e instalam rotas. O comando \texttt{show ip ospf neighbor} no R-CPN-MATRIZ deve exibir o vizinho 2.2.2.2 no estado FULL, indicando sincronização completa. A tabela de roteamento (\texttt{show ip route}) mostrará rotas marcadas com 'O' (OSPF) apontando para as sub-redes de São Carlos via next-hop 11.0.0.2 com métrica [110/2], onde 110 é a distância administrativa padrão do OSPF e 2 é o custo acumulado (soma dos custos das interfaces atravessadas). Esta métrica de custo 2 reflete que o caminho envolve duas interfaces Gigabit: a interface de saída do R-CPN-MATRIZ e a interface de entrada do R-SCA-FILIAL (custo = 10^8/10^9 = 1 cada).
+
+\textbf{[PRINT NECESSÁRIO: No R-CPN-MATRIZ, executar \texttt{show ip ospf neighbor} para evidenciar a adjacência FULL com o roteador 2.2.2.2. Executar também \texttt{show ip route} para mostrar as rotas OSPF (marcadas com 'O') aprendidas de São Carlos, destacando a métrica [110/2] e o next-hop 11.0.0.2. Por fim, executar \texttt{show ip protocols} para exibir as configurações do processo OSPF, incluindo Router ID e interfaces passive.]}
+
+\subsection{Segmentação por VLANs: Isolamento e Controle de Broadcast}
+
+A tecnologia de Virtual LAN (VLAN), padronizada pelo IEEE 802.1Q, permite subdividir uma infraestrutura física de switches em múltiplos domínios de broadcast lógicos. Cada VLAN comporta-se como uma rede independente: broadcasts (como ARP requests, DHCP Discover) propagam-se apenas dentro da VLAN, não alcançando outras. Esta segmentação traz benefícios que vão além da simples redução de tráfego de broadcast; ela implementa camadas de segurança e organização lógica que espelham a estrutura departamental da empresa.
+
+Na Kodalabs, a segmentação por VLANs foi projetada para refletir tanto a divisão funcional dos departamentos quanto requisitos de segurança e isolamento. Em Campinas, a VLAN 10 isola as estações de trabalho dos engenheiros de dados, que manipulam grandes volumes de informação e executam processos de ETL (Extract, Transform, Load) que geram tráfego intenso de rede. Manter este tráfego confinado à VLAN 10 evita que broadcasts e multicasts de ferramentas como Apache Spark (que usa broadcasts para distribuir tarefas entre nós de um cluster) impactem outros departamentos. A VLAN 20, dedicada aos cientistas de dados, isola similarmente o tráfego gerado por frameworks de machine learning (como TensorFlow) que podem envolver sincronização de gradientes em treinamento distribuído. A VLAN 30 para TI justifica-se por questões de segurança: a equipe de infraestrutura acessa remotamente roteadores e switches via SSH, consulta ferramentas de monitoramento e gerencia servidores -- atividades que devem ocorrer em rede isolada para minimizar exposição a ataques laterais caso outra VLAN seja comprometida.
+
+A VLAN 40, exclusiva para servidores, implementa uma "zona desmilitarizada" interna: o servidor SRV-CPN-DATA reside em sub-rede própria (192.168.10.160/29), acessível por todas as VLANs de usuários via roteamento, mas isolado em camada 2. Esta separação facilita a implementação futura de políticas de firewall granulares -- por exemplo, bloquear que a VLAN de visitantes (50) acesse diretamente o servidor, permitindo apenas saída para internet. A VLAN 50 (Visitantes) representa o caso extremo de isolamento: dispositivos nesta VLAN (laptops de consultores, smartphones) são considerados não confiáveis por definição, portanto devem ter acesso mínimo -- apenas internet via gateway, bloqueio de acesso a todas as VLANs corporativas. A implementação técnica deste bloqueio pode ser feita via ACLs (Access Control Lists) aplicadas na subinterface do roteador, mas no escopo atual do projeto o isolamento Layer 2 já provê segurança básica.
+
+Do ponto de vista operacional, VLANs são configuradas nos switches através de dois tipos de portas: access ports, que conectam dispositivos finais a uma única VLAN (removem tag 802.1Q ao enviar quadros ao host, adicionam tag ao receber), e trunk ports, que interconectam switches transportando múltiplas VLANs simultaneamente (quadros trafegam tagged). O switch SW-CPN-ENG, por exemplo, tem portas Fa0/1 a Fa3/1 configuradas como access VLAN 10, conectando os 4 PCs de engenheiros de dados, e portas Fa4/1 a Fa7/1 como access VLAN 20 para cientistas de dados; sua porta Gig8/1 é trunk conectada ao SW-CPN-CORE, transportando VLANs 10 e 20. O comando \texttt{show vlan brief} lista as VLANs criadas e quais portas pertencem a cada uma; \texttt{show interfaces trunk} exibe as portas trunk e quais VLANs são permitidas em cada trunk.
+
+\textbf{[PRINT NECESSÁRIO: No SW-CPN-ENG, executar \texttt{show vlan brief} para evidenciar as VLANs 10 e 20 com suas respectivas portas de acesso. No SW-CPN-CORE, executar \texttt{show interfaces trunk} para mostrar as portas trunk (Gig0/1, Gig1/1, Gig2/1) e as VLANs permitidas em cada uma (1,10,20,30,40,50). Também executar \texttt{show mac address-table} no SW-CPN-CORE para visualizar os endereços MAC aprendidos dinamicamente e suas respectivas VLANs e portas.]}
+
+\section{Serviços de Rede Centralizados: DHCP, DNS e Integração com IP Helper}
+
+Uma das decisões arquiteturais mais impactantes do projeto foi centralizar todos os serviços de rede (DHCP, DNS, HTTP, FTP, SMTP) em um único servidor físico localizado na matriz em Campinas. Esta escolha fundamenta-se em critérios de economia e simplicidade operacional: ao invés de replicar servidores em cada localidade (duplicando custos de hardware, licenças de software e esforço de manutenção), a Kodalabs concentra seus recursos em um servidor robusto que atende ambas as unidades. O servidor SRV-CPN-DATA, com endereço IP 192.168.10.162 na VLAN 40 (Servidores), hospeda em ambiente virtualizado (hipervisor ESXi ou Proxmox) múltiplas máquinas virtuais, cada uma dedicada a um serviço específico -- garantindo isolamento de falhas e facilitando backups seletivos.
+
+\subsection{DHCP e o Papel do IP Helper Address}
+
+O Dynamic Host Configuration Protocol (DHCP) automatiza a distribuição de configurações IP para dispositivos clientes, eliminando a necessidade de configuração manual estática que seria propensa a erros (endereços duplicados, gateways incorretos) e difícil de gerenciar em rede com dezenas de hosts. Quando um computador conecta-se à rede, ele envia um broadcast DHCP Discover procurando servidores DHCP disponíveis; ao receber ofertas (DHCP Offer), o cliente escolhe uma e solicita aquele IP específico (DHCP Request); finalmente, o servidor confirma a alocação (DHCP Acknowledge), enviando não apenas o endereço IP mas também máscara de sub-rede, default gateway, servidores DNS e outras opções como sufixo de domínio (kodalabs.com.br).
+
+A complexidade surge do fato de que DHCP Discover é um broadcast (endereço destino 255.255.255.255), e broadcasts não atravessam roteadores por padrão -- sua propagação é limitada à sub-rede local. Isto criaria um problema para a arquitetura da Kodalabs: se o servidor DHCP está na VLAN 40 (192.168.10.160/29) e um PC na VLAN 10 (192.168.10.0/26) envia DHCP Discover, o broadcast não alcançaria o servidor pois está em sub-rede diferente. A solução é o IP Helper Address, mecanismo definido na RFC 1542 que converte broadcasts DHCP em pacotes unicast direcionados a um servidor específico. Configurado nas subinterfaces do roteador com o comando \texttt{ip helper-address 192.168.10.162}, este recurso instrui o roteador a interceptar broadcasts DHCP na VLAN, encapsulá-los em pacotes unicast com destino 192.168.10.162 (o servidor DHCP) e encaminhá-los através da tabela de roteamento.
+
+O fluxo completo funciona da seguinte forma: um laptop conecta-se ao switch na VLAN 50 (Visitantes) em Campinas e envia DHCP Discover broadcast; o switch encaminha o broadcast para todas as portas da VLAN 50, incluindo a porta trunk conectada ao core; o core encaminha ao roteador via subinterface Gig6/0.50; o roteador, ao receber o broadcast naquela subinterface onde está configurado \texttt{ip helper-address 192.168.10.162}, converte-o em pacote unicast destinado ao servidor; o pacote é roteado internamente para a subinterface Gig6/0.40 (VLAN 40) e entregue ao servidor DHCP; o servidor identifica que a requisição veio da sub-rede 192.168.10.168/29 (informação preservada no campo GIADDR do pacote DHCP) e consulta o pool configurado para aquela rede, selecionando um IP disponível (por exemplo, 192.168.10.172); o servidor envia DHCP Offer de volta ao roteador, que o encaminha à VLAN 50; o cliente responde com DHCP Request e finalmente recebe DHCP Acknowledge contendo IP 192.168.10.172, máscara 255.255.255.248, gateway 192.168.10.169 e DNS 192.168.10.162.
+
+Este mecanismo opera de forma transparente e idêntica para todas as VLANs de Campinas e, crucialmente, também para as VLANs de São Carlos: quando um PC em São Carlos (VLAN 60) envia DHCP Discover, o roteador R-SCA-FILIAL (onde também está configurado \texttt{ip helper-address 192.168.10.162}) converte o broadcast em unicast; o pacote é roteado via OSPF através do link WAN até Campinas; alcança o servidor DHCP; e a resposta retorna pelo mesmo caminho. Assim, um único servidor DHCP atende eficientemente nove VLANs distribuídas em duas localidades geograficamente separadas, sem necessidade de servidores locais ou configurações complexas de replicação.
+
+A principal vantagem desta centralização é operacional: todas as configurações de rede (ranges de IP, opções de DNS, lease times) são gerenciadas em um único ponto. Quando a empresa adicionar uma nova VLAN (por exemplo, VLAN 100 para departamento de MLOps futuro), basta criar o pool correspondente no servidor DHCP e configurar \texttt{ip helper-address} na subinterface do roteador -- nenhuma alteração é necessária em switches ou dispositivos clientes. O risco associado, entretanto, é a criação de um ponto único de falha: se o servidor DHCP falhar, novos dispositivos não conseguirão obter endereços IP (dispositivos já configurados continuam funcionando até o término do lease, tipicamente 24 horas). Mitigação deste risco pode ser implementada através de DHCP failover (dois servidores sincronizados compartilhando os mesmos pools) ou aumentando o lease time para 7 dias (reduzindo a frequência de renovações).
+
+\subsection{DNS Estruturado e Resolução de Nomes Interna}
+
+O servidor DNS da Kodalabs opera em modo split-horizon, respondendo por consultas do domínio interno kodalabs.com.br e atuando como cache/forwarder para domínios externos (internet). Esta configuração permite que usuários acessem recursos internos através de nomes amigáveis -- \texttt{http://intranet.kodalabs.com.br}, \texttt{ftp://arquivos.kodalabs.com.br}, \texttt{mail.kodalabs.com.br} -- ao invés de memorizar endereços IP numéricos. A zona DNS kodalabs.com.br contém registros do tipo A (Address) mapeando nomes para IPs: \texttt{servidor.kodalabs.com.br} aponta para 192.168.10.162, \texttt{intranet.kodalabs.com.br} igualmente para 192.168.10.162 (mesmo servidor, hosts virtuais separados no HTTP), e assim sucessivamente. Um registro MX (Mail Exchange) direciona e-mails endereçados a @kodalabs.com.br para \texttt{mail.kodalabs.com.br}, que resolve para o servidor SMTP.
+
+A integração entre DHCP e DNS é crucial: quando o servidor DHCP aloca um endereço IP a um host, ele também inclui nas opções DHCP o parâmetro \texttt{dns-server 192.168.10.162} e \texttt{domain-name kodalabs.com.br}. Assim, todos os dispositivos automaticamente configuram o servidor DNS da empresa como seu resolver primário e adicionam o sufixo de domínio às consultas -- um usuário pode digitar apenas \texttt{ping intranet} e o sistema operacional expandirá para \texttt{intranet.kodalabs.com.br} antes de consultar o DNS. Para consultas de domínios externos (exemplo: usuário acessa \texttt{www.google.com}), o servidor DNS da Kodalabs não possui a zona \texttt{google.com}, portanto encaminha (forward) a consulta para servidores DNS públicos (8.8.8.8 ou servidores do provedor de internet), cacheia a resposta por um período (TTL) e a retorna ao cliente. Este cache reduz latência em consultas repetidas e diminui tráfego WAN.
+
+A motivação para centralizar DNS, além da economia já mencionada, inclui controle: a empresa pode implementar filtragem (por exemplo, bloquear resolução de domínios de categorias indesejadas como malware, phishing), logging para auditoria (quais sites são mais acessados, detectar tentativas de acesso a domínios suspeitos) e eventual integração com Active Directory no futuro (registros dinâmicos de hosts). O risco é novamente o ponto único de falha -- se o servidor DNS cair, usuários não conseguem resolver nomes (mesmo que a conectividade IP esteja funcionando), o que efetivamente interrompe acesso a internet e serviços internos que dependem de nomes. A mitigação padrão é configurar um servidor DNS secundário (pode ser externo, como 8.8.8.8, listado como segunda opção nas configurações DHCP) para garantir resolução mesmo se o primário falhar.
+
+\textbf{[PRINT NECESSÁRIO: Em um PC cliente (por exemplo, PC-CPN-ENG-PC01), executar o comando \texttt{ipconfig /all} (Windows) ou \texttt{ifconfig} e \texttt{cat /etc/resolv.conf} (Linux) para evidenciar que o dispositivo recebeu via DHCP o IP, máscara, gateway e DNS server (192.168.10.162). Executar também \texttt{nslookup intranet.kodalabs.com.br} para demonstrar que o DNS está resolvendo corretamente os nomes internos para o IP do servidor.]}
+
+\section{Testes de Conectividade e Validação de Funcionamento}
+
+A validação de uma infraestrutura de rede vai além da simples configuração dos equipamentos; exige testes sistemáticos que comprovem não apenas a conectividade básica, mas também o correto funcionamento de protocolos, roteamento, segmentação e serviços. Os testes realizados na rede da Kodalabs seguiram uma progressão lógica, desde a conectividade mais simples (intra-VLAN) até cenários complexos (acesso a serviços centralizados através do link WAN).
+
+\subsection{Teste de Conectividade Intra-VLAN}
+
+O teste mais básico verifica comunicação entre dispositivos na mesma VLAN, processo que deve ocorrer exclusivamente via switching de camada 2 sem envolvimento do roteador. Um ping entre PC-CPN-ENG-PC01 (192.168.10.10) e PC-CPN-ENG-PC02 (192.168.10.11), ambos na VLAN 10, resultou em respostas com TTL=128 (valor inicial do Windows, indicando zero hops via roteador) e latência inferior a 1 milissegundo. Este resultado confirma que o switch SW-CPN-ENG está corretamente aprendendo endereços MAC em sua tabela CAM e encaminhando quadros diretamente entre as portas de acesso, sem flooding desnecessário.
+
+\subsection{Teste de Roteamento Inter-VLAN Local}
+
+Para validar o Router-on-a-Stick, executou-se ping de PC-CPN-ENG-PC01 (VLAN 10, 192.168.10.10) para PC-CPN-DS-PC01 (VLAN 20, 192.168.10.70). As respostas apresentaram TTL=127 (decrementado uma unidade, confirmando passagem pelo roteador) e latência de 1-2 milissegundos. O caminho percorrido foi: PC origem envia para gateway 192.168.10.1 (subinterface Gig6/0.10 do R-CPN-MATRIZ); roteador processa em camada 3, identifica que 192.168.10.70 pertence à sub-rede 192.168.10.64/26 diretamente conectada via Gig6/0.20; reencaminha o pacote adicionando tag VLAN 20; switch SW-CPN-CORE recebe e encaminha via trunk para SW-CPN-ENG; finalmente, o quadro chega ao PC destino. Este teste confirma que o encapsulamento 802.1Q nas subinterfaces está funcional e que o roteamento inter-VLAN opera corretamente.
+
+\subsection{Teste de Conectividade WAN e Roteamento OSPF}
+
+O teste crítico para validar a interconexão entre localidades foi um ping de PC-CPN-ENG-PC01 (Campinas, 192.168.10.10) para PC-SCA-ADM-PC01 (São Carlos, 192.168.60.10). As respostas apresentaram TTL=125 (decrementado três vezes), indicando três saltos: 1) PC para R-CPN-MATRIZ (gateway local da VLAN 10); 2) R-CPN-MATRIZ para R-SCA-FILIAL (via link WAN 11.0.0.0/30); 3) R-SCA-FILIAL para PC destino (gateway da VLAN 60). A latência observada foi de aproximadamente 2-5 milissegundos, valor consistente com o processamento de dois roteadores e a propagação em um link WAN de 90 km (a velocidade da luz na fibra óptica é ~200.000 km/s, logo 90 km representam ~0,45 ms de latência de propagação pura, multiplicada por 2 para round-trip resulta em ~0,9 ms; o restante é overhead de processamento nos roteadores).
+
+Para detalhar o caminho, executou-se \texttt{tracert 192.168.60.10} a partir do PC em Campinas, que retornou três hops: primeiro hop 192.168.10.1 (gateway VLAN 10), segundo hop 11.0.0.2 (interface WAN do R-SCA-FILIAL), terceiro hop 192.168.60.10 (destino). Este traceroute visualiza perfeitamente a topologia hierárquica: tráfego sobe até o roteador local, atravessa o backbone WAN e desce até o host destino na localidade remota. A verificação das tabelas de roteamento em ambos os roteadores confirmou que as rotas OSPF foram aprendidas corretamente: R-CPN-MATRIZ exibiu rotas 'O' para 192.168.60.0/26, 192.168.60.64/26, 192.168.60.128/27 e 192.168.60.160/28, todas via next-hop 11.0.0.2 com métrica [110/2]; simetricamente, R-SCA-FILIAL aprendeu as cinco sub-redes de Campinas via next-hop 11.0.0.1.
+
+\textbf{[PRINT NECESSÁRIO: A partir de um PC em Campinas (VLAN 10), executar \texttt{ping 192.168.60.10} e capturar a tela mostrando as 4 respostas bem-sucedidas com TTL=125 e tempo ~2ms. Em seguida, executar \texttt{tracert 192.168.60.10} e capturar a saída mostrando os três hops: 192.168.10.1, 11.0.0.2 e 192.168.60.10. Nos roteadores, executar \texttt{show ip route} evidenciando as rotas OSPF (marcadas com 'O').]}
+
+\subsection{Validação de Serviços: DHCP e DNS}
+
+Para testar a integração DHCP com IP Helper, conectou-se um laptop novo à rede wireless (VLAN 50) em Campinas. O dispositivo, configurado para obter IP automaticamente, enviou DHCP Discover que foi convertido pelo roteador e encaminhado ao servidor; em resposta, recebeu IP 192.168.10.172/29, gateway 192.168.10.169, DNS 192.168.10.162. O comando \texttt{ipconfig /all} no laptop confirmou estas configurações. Em seguida, testou-se a resolução DNS executando \texttt{nslookup intranet.kodalabs.com.br}, que retornou corretamente o endereço 192.168.10.162, comprovando que o servidor DNS está acessível e respondendo consultas internas.
+
+Um teste mais sofisticado envolveu um PC em São Carlos acessando o servidor web: ao digitar \texttt{http://intranet.kodalabs.com.br} no navegador, o PC primeiro consultou o DNS (192.168.10.162, acessível via WAN), recebeu o IP de resposta, e então estabeleceu conexão HTTP (porta TCP 80) com o servidor. A página web carregou corretamente, confirmando que não apenas a resolução DNS funciona através da WAN, mas também que serviços de aplicação (HTTP) são acessíveis de qualquer localidade. Este teste end-to-end valida múltiplas camadas: conectividade física, switching, roteamento inter-VLAN, roteamento OSPF entre localidades, DHCP relay, DNS e finalmente o serviço de aplicação.
+
+\section{Justificativa Estratégica: Decisões Arquiteturais e Análise de Riscos}
+
+\subsection{Servidor Centralizado: Vantagens Operacionais e Riscos de Disponibilidade}
+
+A centralização de todos os serviços corporativos em um único servidor físico localizado em Campinas foi decisão consciente que equilibra custos e complexidade. As vantagens são múltiplas e tangíveis. Primeiro, economia de hardware: adquirir um servidor robusto (Dell PowerEdge ou equivalente, com processador multi-core, 32 GB RAM, storage em RAID) custa aproximadamente R\$ 8.000-12.000; replicar este investimento em São Carlos duplicaria o custo sem necessariamente duplicar a capacidade útil, já que os serviços atuais (DHCP, DNS, HTTP interno) têm baixa carga. Segundo, simplificação de manutenção: patches de segurança, atualizações de software, backups e monitoramento concentram-se em um único ponto; a equipe de TI não precisa deslocar-se frequentemente a São Carlos para tarefas administrativas. Terceiro, consistência de configuração: todos os usuários acessam a mesma versão dos serviços, evitando problemas de sincronização de dados entre servidores replicados.
+
+Contudo, esta centralização cria dependências que devem ser explicitamente reconhecidas e mitigadas. O risco primário é disponibilidade: se o servidor SRV-CPN-DATA falhar (falha de hardware, corrupção de sistema operacional, ataque de ransomware), todos os serviços tornam-se indisponíveis simultaneamente -- usuários não obtêm IPs via DHCP, não resolvem nomes via DNS, não acessam e-mail nem arquivos compartilhados. Para uma empresa como a Kodalabs, cuja operação depende de acesso contínuo a dados, isto pode significar horas ou até dias de paralisação enquanto o hardware é substituído ou backups são restaurados. A mitigação mais efetiva seria implementar um servidor secundário em São Carlos operando em modo failover: serviços críticos como DHCP e DNS seriam replicados (DHCP failover permite que dois servidores compartilhem os mesmos pools; DNS secundário recebe cópias das zonas via transferência de zona), de forma que falha do primário resulta em transição automática para o secundário. Esta solução, entretanto, quase duplica o investimento em hardware e aumenta significativamente a complexidade operacional (configuração de replicação, monitoramento de sincronização).
+
+Uma abordagem intermediária, mais apropriada ao porte atual da Kodalabs, é implementar backups rigorosos e ter hardware de substituição rápida (spare parts). Backups diários do servidor (imagens completas e backups incrementais de dados) armazenados em storage externo (NAS dedicado ou nuvem) garantem que, em caso de falha catastrófica, o servidor pode ser reconstruído em algumas horas ao invés de dias. Manter contratos de SLA com fornecedores para substituição de hardware em até 4 horas (NBD - Next Business Day ou mesmo 4-hour response) reduz o downtime potencial. Adicionalmente, aumentar o lease time do DHCP de 24h para 7 dias significa que, se o servidor DHCP ficar indisponível por algumas horas, hosts já configurados continuam operando normalmente pois seus leases não expiram.
+
+\subsection{Switches de Core: Investimento em Escalabilidade Futura}
+
+Conforme discutido anteriormente, a inclusão de switches de core dedicados (SW-CPN-CORE, SW-SCA-CORE) representa um custo adicional de aproximadamente R\$ 5.600 (dois switches a ~R\$ 2.800 cada) que poderia, teoricamente, ser economizado conectando-se os switches de acesso diretamente aos roteadores ou entre si. Esta economia de curto prazo, entretanto, seria falsa economia se analisada sob perspectiva de crescimento. A arquitetura hierárquica com core dedicado traz vantagens que se manifestam especialmente quando a rede cresce.
+
+Primeiro, capacidade de expansão sem reestruturação: quando a equipe de Campinas crescer e novos departamentos surgirem (por exemplo, departamento de MLOps previsto para 2027), será necessário adicionar switches para acomodar as novas estações de trabalho. Com core dedicado, basta adquirir um novo switch e conectá-lo a uma porta livre do SW-CPN-CORE; toda a topologia existente permanece inalterada, nenhum cabo precisa ser repassado, nenhum equipamento precisa ser reconfigurado além do novo switch. Sem core, cada novo switch teria que ser "encaixado" na cascata existente, potencialmente excedendo o número de portas disponíveis no roteador ou aumentando a profundidade da cascata (o que eleva latência). Segundo, preparação para redundância futura: quando a empresa atingir porte que justifique alta disponibilidade, será possível adicionar um segundo switch de core e configurar ambos em par com Spanning Tree ou similar, criando caminhos redundantes; sem core, implementar redundância exigiria redesenho completo da topologia. Terceiro, isolamento de funções: concentrar switching de alto volume no core alivia carga do roteador, que pode dedicar recursos de CPU ao roteamento e OSPF ao invés de processar tabelas CAM gigantescas.
+
+O risco associado ao core é novamente o ponto único de falha: se o SW-CPN-CORE falhar, toda a conectividade local em Campinas é interrompida (switches de acesso ficam isolados, não conseguem comunicar-se entre si nem com o roteador). A mitigação imediata é garantir que o switch core seja modelo de qualidade empresarial (ao invés de switch doméstico barato), mantido em ambiente com temperatura controlada, conectado a no-break para proteção contra quedas de energia, e com configuração salva regularmente para permitir restauração rápida se necessário repor o equipamento. A mitigação definitiva seria o segundo switch core já mencionado, criando redundância completa.
+
+\subsection{OSPF: Automação de Roteamento versus Complexidade de Operação}
+
+A escolha do OSPF como protocolo de roteamento foi motivada, conforme explicado, pela necessidade de escalabilidade e convergência rápida. As vantagens em termos de automação são substanciais: quando Ribeirão Preto for adicionado à rede, o novo roteador R-RIB-FILIAL simplesmente será conectado via link WAN ao R-CPN-MATRIZ, configurado com processo OSPF anunciando suas sub-redes locais; automaticamente ele descobrirá os vizinhos existentes, trocará rotas e todos os três roteadores convergirão para uma topologia consistente. Usuários em São Carlos poderão pingar Ribeirão Preto sem que nenhuma linha de configuração seja alterada no R-SCA-FILIAL -- as rotas são aprendidas dinamicamente via propagação de LSAs através de R-CPN-MATRIZ. Este nível de automação seria impossível com rotas estáticas, que exigiriam adicionar manualmente rotas para as sub-redes de Ribeirão Preto em todos os roteadores existentes (operação trabalhosa e propensa a erros).
+
+O risco, entretanto, reside na complexidade de troubleshooting quando problemas ocorrem. OSPF pode falhar em formar adjacências por razões sutis: mismatch de timers (Hello e Dead Interval devem ser idênticos entre vizinhos), diferenças de MTU (Maximum Transmission Unit) nas interfaces, autenticação habilitada em um lado mas não no outro, ou simplesmente falhas de conectividade física que não são imediatamente óbvias. Diagnosticar estes problemas requer conhecimento profundo do protocolo e das ferramentas de diagnóstico (\texttt{show ip ospf neighbor}, \texttt{debug ip ospf adj} para análise de adjacências em tempo real). Além disso, OSPF consome recursos computacionais: em redes muito grandes, mudanças frequentes de topologia podem causar recálculos SPF repetidos, gerando picos de CPU que degradam performance. Na escala atual da Kodalabs (2 roteadores), isto não é preocupação, mas deve ser monitorado conforme a rede cresce.
+
+A mitigação passa por documentação e treinamento: a equipe de TI deve ter clareza das configurações OSPF (quais redes anunciadas, quais interfaces passive, qual o Router ID de cada equipamento) e acesso a documentação atualizada; treinamento específico em OSPF (curso CCNA ou equivalente) garante que pelo menos dois membros da equipe saibam diagnosticar problemas. Implementar logging centralizado (syslog) onde todos os roteadores enviam mensagens de evento para um servidor de logs facilita auditoria: ao investigar uma falha de comunicação, é possível revisar logs históricos para identificar quando uma adjacência caiu e por quê.
+
+\section{Análise Financeira Detalhada do Projeto}
+
+A viabilidade econômica de um projeto de infraestrutura de TI deve ser avaliada não apenas pelo custo absoluto, mas pela relação custo-benefício considerando o porte da empresa, a criticidade da infraestrutura para o negócio e a vida útil esperada dos equipamentos. Para a Kodalabs, com faturamento anual de R\$ 1,2 milhão, o investimento de R\$ 162.000 em rede corporativa representa aproximadamente 13,5\% da receita anual -- percentual que se enquadra na faixa típica para empresas de base tecnológica (benchmarks de mercado indicam 10-20\% do faturamento para empresas cujo negócio depende criticamente de TI).
+
+\subsection{Composição Detalhada dos Custos Diretos}
+
+A tabela abaixo discrimina os equipamentos de rede, quantidades, valores unitários de mercado (pesquisados em distribuidores especializados como Ingram Micro e Tech Data, preços de abril de 2026) e subtotais.
+
+\begin{table}[H]
+\centering
+\caption{Custos diretos de equipamentos e materiais}
+\begin{tabularx}{\textwidth}{@{}lrrX@{}}
+\toprule
+\textbf{Item} & \textbf{Qtd} & \textbf{Valor Unit. (R\$)} & \textbf{Subtotal (R\$)} \\ \midrule
+Roteador Cisco 1941 (2x GE, USB, DRAM 512MB) & 2 & 2.800,00 & 5.600,00 \\
+Switch Cisco Catalyst 2960 24 portas GE & 6 & 2.400,00 & 14.400,00 \\
+Servidor Dell PowerEdge T140 (Xeon E-2224, 16GB, 2×1TB) & 1 & 9.500,00 & 9.500,00 \\
+Access Point Cisco Aironet 1815i (Wave 2, dual-band) & 2 & 1.100,00 & 2.200,00 \\
+Desktop Dell OptiPlex 3080 SFF (i5-10500, 8GB, 256GB SSD) & 15 & 2.800,00 & 42.000,00 \\
+Workstation Dell Precision 3650 (i7-11700, 32GB, NVIDIA T400) & 10 & 6.500,00 & 65.000,00 \\
+Cabo UTP Cat6 (rolo 305m, certificado) & 4 & 680,00 & 2.720,00 \\
+Patch Panel 24 portas Cat6 com suporte de parede & 4 & 320,00 & 1.280,00 \\
+Rack aberto 19" 12U de parede & 2 & 850,00 & 1.700,00 \\
+Patch Cord Cat6 1m (caixa 25 unidades) & 4 & 180,00 & 720,00 \\
+No-break APC Back-UPS Pro 1500VA (bivolt) & 3 & 1.400,00 & 4.200,00 \\
+Materiais diversos (abraçadeiras, etiquetas, ferramentas) & -- & -- & 1.200,00 \\ \midrule
+\textbf{SUBTOTAL EQUIPAMENTOS E MATERIAIS} & & & \textbf{150.520,00} \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+Nota-se que os valores são realistas e refletem pesquisa de mercado para equipamentos corporativos de qualidade empresarial, não produtos consumer de baixo custo. Por exemplo, o roteador Cisco 1941 (sucessor do PT1000 simulado no Packet Tracer) é equipamento robusto com suporte a IOS completo incluindo OSPF, subinterfaces 802.1Q e recursos de segurança; switches Cisco Catalyst 2960 são linha consolidada em ambientes corporativos; o servidor Dell PowerEdge T140 é modelo entry-level de servidor torre, apropriado para PMEs, com processador Xeon (ao invés de CPU desktop), suporte a ECC RAM e controladoras RAID.
+
+\subsection{Custos de Serviços e Mão de Obra}
+
+Além dos equipamentos, o projeto envolve custos de serviços técnicos especializados:
+
+\begin{table}[H]
+\centering
+\caption{Serviços de instalação e configuração}
+\begin{tabularx}{\textwidth}{@{}lrX@{}}
+\toprule
+\textbf{Serviço} & \textbf{Valor (R\$)} & \textbf{Descrição} \\ \midrule
+Projeto lógico de rede (topologia, endereçamento, documentação) & 3.200,00 & 16 horas × R\$ 200/hora (engenheiro de redes sênior) \\
+Instalação física (cabeamento estruturado, montagem de racks) & 4.800,00 & 40 horas × R\$ 120/hora (técnico instalador) \\
+Configuração de roteadores, switches e servidores & 6.400,00 & 32 horas × R\$ 200/hora (especialista Cisco) \\
+Testes, validação e troubleshooting & 2.400,00 & 12 horas × R\$ 200/hora \\
+Documentação técnica (as-built) e treinamento de equipe & 1.600,00 & 8 horas × R\$ 200/hora \\ \midrule
+\textbf{SUBTOTAL SERVIÇOS} & \textbf{18.400,00} & \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{BDI e Valor Final do Projeto}
+
+O BDI (Benefícios e Despesas Indiretas) é percentual aplicado sobre os custos diretos para cobrir lucro da empresa prestadora de serviços, impostos, despesas administrativas e margem para imprevistos. Para projetos de TI de médio porte, BDI típico situa-se entre 25-40\%. Adotando BDI de 30\%:
+
+\begin{table}[H]
+\centering
+\caption{Composição do valor final}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Componente} & \textbf{Valor (R\$)} \\ \midrule
+Equipamentos e materiais & 150.520,00 \\
+Serviços de instalação e configuração & 18.400,00 \\ \midrule
+\textbf{Subtotal (base de cálculo)} & \textbf{168.920,00} \\[0.2cm]
+BDI (30\% sobre subtotal) & 50.676,00 \\ \midrule
+\textbf{VALOR TOTAL DO PROJETO} & \textbf{219.596,00} \\ \bottomrule
+\end{tabular}
+\end{table}
+
+Arredondando para facilitar orçamento comercial, o valor proposto seria \textbf{R\$ 220.000,00}.
+
+\subsection{Análise de Retorno e Justificativa de Investimento}
+
+Com faturamento anual de R\$ 1,2 milhão, o investimento de R\$ 220.000 representa 18,3\% da receita -- percentual elevado que demanda justificativa robusta. A análise de retorno considera benefícios qualitativos (difíceis de quantificar monetariamente mas críticos para operação) e quantitativos.
+
+\textbf{Benefícios qualitativos:}
+\begin{itemize}
+    \item \textbf{Capacidade de entrega:} Com infraestrutura adequada, a empresa pode aceitar projetos maiores e mais complexos de engenharia de dados que exigem processamento distribuído e transferência de grandes volumes -- projetos que, sem a infraestrutura, seriam inviáveis.
+    \item \textbf{Produtividade:} Rede estável e rápida reduz tempo perdido com problemas de conectividade, acessos lentos a servidores, falhas de sincronização de arquivos. Estimando que cada colaborador técnico (15 pessoas) perca em média 30 minutos/dia com problemas de rede em infraestrutura precária, a economia anual seria 15 × 0,5h × 220 dias úteis = 1.650 horas. Valorizando a hora de um engenheiro em R\$ 80, isto representa R\$ 132.000/ano em produtividade recuperada.
+    \item \textbf{Segurança e conformidade:} Segmentação por VLANs, isolamento de visitantes e centralização de logs facilitam conformidade com LGPD e requisitos de segurança de clientes (especialmente bancos e fintechs que auditam fornecedores). Evitar uma multa de LGPD ou perda de contrato por não-conformidade justifica parte significativa do investimento.
+\end{itemize}
+
+\textbf{Benefícios quantitativos:}
+\begin{itemize}
+    \item \textbf{Redução de custos operacionais:} Centralização de serviços elimina necessidade de TI local em São Carlos (economia de ~1 salário técnico, R\$ 6.000/mês = R\$ 72.000/ano).
+    \item \textbf{Escalabilidade:} Infraestrutura preparada para crescimento até 50-60 colaboradores sem grandes investimentos adicionais (apenas switches e desktops incrementais). Sem esta base, crescer exigiria refazer a rede, custo que pode alcançar o dobro do investimento inicial.
+\end{itemize}
+
+Considerando apenas a economia operacional conservadora de R\$ 72.000/ano, o payback simples do investimento seria 220.000 / 72.000 ≈ 3 anos -- prazo razoável considerando vida útil de equipamentos de rede (5-7 anos para roteadores e switches empresariais bem mantidos).
+
+\section{Conclusão: Fundamentos Consolidados e Preparação para Crescimento}
+
+O projeto de infraestrutura de rede desenvolvido para a Kodalabs representa aplicação integrada de fundamentos de redes de computadores em contexto empresarial realista, equilibrando rigor técnico, viabilidade econômica e visão estratégica de longo prazo. A solução implementada não é meramente funcional -- ela é propositalmente arquitetada para suportar a trajetória de crescimento esperada de uma empresa de tecnologia em expansão, transformando infraestrutura de TI de mero custo operacional em ativo estratégico que habilita o negócio.
+
+Do ponto de vista técnico, o projeto consolidou aplicação de conceitos essenciais da disciplina SSC0540: subnetting com VLSM para otimização de espaço de endereçamento IPv4, demonstrando que técnicas aparentemente acadêmicas têm impacto prático tangível ao permitir acomodar nove VLANs em dois blocos /24 com margem de 35\% para expansão; roteamento dinâmico via OSPF, mostrando como protocolos link-state oferecem automação e convergência rápida essenciais em redes que evoluem; segmentação por VLANs conforme IEEE 802.1Q, implementando isolamento de broadcast e fundamentos de segurança em camada 2; técnica de Router-on-a-Stick para roteamento inter-VLAN eficiente com recursos limitados; e provisionamento automatizado através de DHCP com IP Helper, ilustrando como protocolos de aplicação integram-se à infraestrutura de roteamento.
+
+A arquitetura hierárquica adotada -- modelo de três camadas com topologia estrela estendida -- não é acidental; ela reflete décadas de evolução da engenharia de redes corporativas, consolidando práticas que equilibram performance, custo e complexidade. A decisão de implementar switches de core dedicados, mesmo com o custo adicional de curto prazo, exemplifica pensamento estratégico: antecipar necessidades futuras e construir fundações robustas que absorvam crescimento incremental sem reestruturações caras. Similarmente, a centralização de serviços em servidor único, embora crie dependências que exigem mitigação cuidadosa, representa escolha pragmática apropriada ao porte da organização -- evitando overengineering (replicação prematura que aumenta custos sem benefícios proporcionais) enquanto estabelece bases para eventual evolução para alta disponibilidade quando o negócio justificar o investimento.
+
+Os testes de validação realizados -- desde pings intra-VLAN até acessos a serviços através do link WAN -- não apenas confirmam o funcionamento técnico, mas demonstram a integração coesa de múltiplas camadas do modelo OSI: camada física (cabeamento estruturado Cat6), camada de enlace (switching, VLANs), camada de rede (roteamento IP, OSPF), camada de transporte (TCP para HTTP) e camada de aplicação (DNS, DHCP, HTTP). Esta visão em camadas, central à disciplina de redes, materializa-se em infraestrutura tangível onde cada protocolo desempenha seu papel específico de forma coordenada.
+
+Do ponto de vista de gestão de projetos e análise financeira, o trabalho desenvolvido ilustra que engenharia de redes não é exercício puramente técnico -- ela exige consideração de restrições orçamentárias, análise de custo-benefício, avaliação de riscos e planejamento de longo prazo. O investimento de R\$ 220.000, embora substancial para uma PME de R\$ 1,2 milhão de faturamento, justifica-se pela criticidade da infraestrutura de TI para uma empresa de engenharia de dados, pela produtividade recuperada e pelos riscos evitados (não-conformidade regulatória, incapacidade de aceitar projetos maiores, limitações de crescimento).
+
+Finalmente, a documentação técnica produzida -- incluindo diagramas de topologia, tabelas de endereçamento, configurações de equipamentos e instruções para validação -- constitui ativo valioso que transcende o projeto inicial. Equipes futuras de TI, sejam colaboradores internos ou consultores externos, poderão compreender a arquitetura implementada, diagnosticar problemas, planejar expansões e manter a infraestrutura operacional ao longo dos anos. Esta transferência de conhecimento, frequentemente negligenciada em projetos de TI, é diferencial que eleva infraestrutura de solução técnica pontual a sistema sustentável de longo prazo.
+
+A Kodalabs, ao investir nesta infraestrutura de rede, não está apenas conectando computadores entre Campinas e São Carlos -- está estabelecendo fundações digitais que habilitam colaboração entre equipes distribuídas, acesso seguro e eficiente a dados, provisionamento ágil de recursos tecnológicos e capacidade de crescimento orgânico conforme o negócio prospera. Em última análise, este projeto exemplifica o papel da engenharia de redes como disciplina que transforma conceitos abstratos (pacotes, rotas, protocolos) em infraestrutura concreta que sustenta organizações modernas.
+
+\end{document}

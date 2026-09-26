@@ -1,0 +1,102 @@
+1) Desenvolver a rede IPv6 da figura em anexo seguindo o roteiro também em anexo.
+
+2) Caso o(a) aluno(a) consiga desenvolver esta rede, ele/ela deverá criar uma outra rede com a quarta área designada a ela
+
+*** Agradecimentos ao Gabriel Fontes pelo preparo do pdf com as instruções!
+
+Crie a topologia
+Figure 1: Topologia
+• 3 áreas:
+– Area 0 (2001:0::/32)
+∗ Rede 1 (2001:0:1::/64)
+∗ Rede 2 (2001:0:2::/64)
+– Area 1 (2001:1::/32)
+∗ Rede 1 (2001:1:1::/64)
+– Area 2 (2001:2::/32)
+∗ Rede 1 (2001:2:1::/64)
+• 3 roteadores (ISR 4331, suportam ipv6)
+– Roteador 0:
+∗ Area 0 (2001:0:1::1)
+∗ Area 0 (2001:0:2::1)
+– Roteador 1:
+∗ Area 0 (2001:0:1::2)
+∗ Area 1 (2001:1:1::1)
+1
+– Roteador 2:
+∗ Area 0 (2001:0:2::2)
+∗ Area 1 (2001:2:1::1)
+• Ligue os dispositivos na ordem:
+– Roteador 0 (gig 0/0/0) -> Roteador 1 (gig 0/0/0)
+– Roteador 0 (gig 0/0/1) -> Roteador 2 (gig 0/0/0)
+– Roteador 1 (gig 0/0/1) -> Switch
+– Roteador 2 (gig 0/0/1) -> Switch
+Configuração roteador 0
+enable
+configure terminal
+ipv6 unicast-routing
+ipv6 router ospf 1
+router-id 10.0.0.0
+exit
+# lado conectado no roteador 1
+interface gig 0/0/0
+ipv6 enable
+ipv6 ospf 1 area 0
+ipv6 address 2001:0:1::1/64
+no shutdown
+exit
+# lado conectado no roteador 2
+interface gig 0/0/1
+ipv6 enable
+ipv6 ospf 1 area 0
+ipv6 address 2001:0:2::1/64
+no shutdown
+exit
+Configuração roteador 1
+enable
+configure terminal
+ipv6 unicast-routing
+ipv6 router ospf 1
+router-id 10.0.0.1
+exit
+2
+# lado conectado no roteador 0
+interface gig 0/0/0
+ipv6 enable
+ipv6 ospf 1 area 0
+ipv6 address 2001:0:1::2/64
+no shutdown
+exit
+# lado conectado no switch
+interface gig 0/0/1
+ipv6 enable
+ipv6 ospf 1 area 1
+ipv6 address 2001:1:1::1/64
+no shutdown
+exit
+Configuração roteador 2
+enable
+configure terminal
+ipv6 unicast-routing
+ipv6 router ospf 1
+router-id 10.0.0.2
+exit
+# lado conectado no roteador 0
+interface gig 0/0/0
+ipv6 enable
+ipv6 ospf 1 area 0
+ipv6 address 2001:0:2::2/64
+no shutdown
+exit
+# lado conectado no switch
+interface gig 0/0/1
+ipv6 enable
+ipv6 ospf 1 area 2
+ipv6 address 2001:2:1::1/64
+no shutdown
+exit
+3
+Dispositivos fim
+Habilite gateway ipv6 dinâmico nos dispositivos fim, acelere um pouco o tempo
+(alt+d), e pingue (p).
+Deve ser possível pingar dispositivos em diferentes áreas sem problemas.
+4

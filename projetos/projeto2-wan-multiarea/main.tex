@@ -1,0 +1,1054 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{indentfirst}
+\usepackage{subcaption}
+\usepackage{url}
+\usepackage{breakurl}
+
+% Comando mágico para permitir quebra de linha em URLs em qualquer caractere
+\def\UrlBreaks{\do\/\do-\do.\do\_\do\\\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w\do\x\do\y\do\z\do\A\do\B\do\C\do\D\do\E\do\F\do\G\do\H\do\I\do\J\do\K\do\L\do\M\do\N\do\O\do\P\do\Q\do\R\do\S\do\T\do\U\do\V\do\W\do\X\do\Y\do\Z}
+\geometry{
+    a4paper,
+    left=3cm,
+    right=2cm,
+    top=3cm,
+    bottom=2cm
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{SSC0540 -- Redes de Computadores}
+\fancyhead[R]{Kodalabs -- Infraestrutura WAN}
+\fancyfoot[C]{\thepage}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\begin{document}
+
+% Capa
+\begin{titlepage}
+    \centering
+    \vspace*{1.5cm}
+
+    {\LARGE \textbf{Universidade de São Paulo}}\\[0.3cm]
+    {\large Instituto de Ciências Matemáticas e de Computação}\\[0.2cm]
+    {\large Departamento de Sistemas de Computação}\\[0.2cm]
+    {\large SSC0540 - Redes de Computadores}\\[3.5cm]
+
+    {\Huge \textbf{ 
+}}\\[0.8cm]
+    {\LARGE \textbf{Rede Corporativa para a Kodalabs}}\\[0.3cm]
+    {\large \textit{Consultoria em Infraestrutura e Engenharia de Dados}}\\[5cm]
+
+    \vfill
+
+    {\large \textbf{Professor:} Jó Ueyama}\\[0.3cm]
+    {\large \textbf{Aluno:} Juliana Pirolla}\\[0.2cm]
+    {\large \textbf{NUSP:} 12925709}\\[2cm]
+
+    {\large São Carlos -- SP}\\
+    {\large 04 de maio de 2026}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =============================================================
+\section{Introdução}
+% =============================================================
+
+A Kodalabs é uma consultoria brasileira especializada em infraestrutura de dados e
+engenharia analítica, fundada em 2022 para atender empresas que buscam modernizar
+processos de coleta, transformação e análise de dados. Com faturamento anual de
+aproximadamente R\$~1~milhão e equipe de 20 colaboradores, a empresa opera em
+duas localidades estratégicas: Campinas, núcleo técnico com
+cerca de 10 profissionais (engenheiros de dados, cientistas de dados e técnicos de
+infraestrutura); e São Carlos, sede administrativa e comercial que também comporta 10 colaboradores.
+
+A matriz localizada em Campinas centraliza toda a infraestrutura tecnológica da empresa, incluindo o servidor corporativo responsável pelos serviços de DNS, DHCP, HTTP, FTP e SMTP. A filial de São Carlos não possui servidores locais, consumindo integralmente os recursos por meio de um link WAN conectado à matriz.
+
+
+Essa arquitetura representa um trade-off entre a redução de custos operacionais e a simplificação da gestão, em contrapartida à dependência do link WAN. Em caso de falha nesse enlace, a filial perde o acesso aos serviços centralizados, comprometendo suas operações. Para mitigar esse risco, podem ser adotadas estratégias como redundância de links WAN, implementação de servidores locais de contingência ou uso de mecanismos de cache e replicação de serviços críticos, soluções que podem ser consideradas futuramente para aumentar a robustez da rede.
+
+
+Além disso, considerando o contexto da empresa, foram definidos os seguintes requisitos para a infraestrutura de rede:
+
+
+\begin{itemize}
+
+\item \textbf{Alto volume de tráfego WAN:} projetos de engenharia de dados demandam a transferência de grandes volumes de dados, sincronização de repositórios e distribuição de modelos de \textit{machine learning}.
+
+
+\item \textbf{Segurança e conformidade com a LGPD:} o tratamento de dados sensíveis de clientes exige segmentação rigorosa por meio de VLANs, além da aplicação de políticas de controle de acesso e monitoramento contínuo.
+
+
+\item \textbf{Acesso transparente a serviços centralizados:} a equipe distribuída deve ter acesso uniforme a serviços como e-mail, servidores de arquivos e sistemas internos, independentemente de sua localização física.
+
+
+\item \textbf{Escalabilidade:} a previsão de expansão para novas filiais, como Ribeirão Preto e São Paulo, demanda uma arquitetura de rede preparada para crescimento horizontal, sem perda significativa de desempenho ou aumento excessivo de complexidade.
+
+\end{itemize}
+
+
+A solução proposta fundamenta-se em modelo hierárquico de três camadas (core,
+distribuição e acesso), roteamento dinâmico via OSPF, segmentação por VLANs com
+endereçamento VLSM e centralização de serviços em servidor único na matriz. O
+investimento total previsto é de R\$ 278.000,00.
+
+\subsection{Apresentação do Projeto}
+A visualização da arquitetura proposta no Cisco Packet Tracer também foi detalhada na apresentação do projeto. O vídeo pode ser visualizado em: \href{https://drive.google.com/file/d/10FB-KzoTFLF4-YY6GyAQ_s6FHVqvc8jr/view?usp=sharing}{link}.
+% =============================================================
+\section{Detalhamento das Localidades e Distribuição de Recursos}
+% =============================================================
+
+\subsection{Campinas: Matriz Tecnológica}
+
+A matriz de Campinas concentra o núcleo técnico da Kodalabs e toda a infraestrutura
+de serviços. O roteador \texttt{R-CPN-MATRIZ} atua como gateway inter-VLAN via
+técnica Router-on-a-Stick e como ponto de saída para o link WAN. O switch de core
+\texttt{SW-CPN-CORE} agrega o tráfego local, separando funções de camada~2 do
+roteador e permitindo expansão sem consumir suas interfaces físicas e, conectado ao switch core, temos \texttt{SW-CPN-ENG}, servindo as equipes
+técnicas (VLANs 10 e 20), e \texttt{SW-CPN-ACC}, atendendo TI, servidores e
+visitantes (VLANs 30, 40 e 50). O \textit{access point} \texttt{AP-CPN-WIFI},
+conectado ao SW-CPN-ACC, provê cobertura \textit{wireless} para visitantes na
+VLAN~50, mantendo-os isolados das redes corporativas.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{campinas-geral.png}
+    \caption{Estrutura de rede proposta para a matriz em Campinas.}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsubsection{Plano de Endereçamento IP -- Campinas (VLSM)}
+
+Campinas utiliza o bloco \textbf{192.168.10.0/24}, subdividido por VLSM de forma
+que cada segmento receba uma máscara proporcional às suas necessidades, evitando
+desperdício de endereços e preservando espaço para crescimento futuro. A subdivisão
+foi feita hierarquicamente: o bloco /24 foi particionado em blocos /26; um deles
+foi subdividido em /27; parte do espaço restante foi fragmentada em /29.
+
+\begin{itemize}
+
+\item \textbf{VLAN 10 — Engenharia de Dados}  
+
+Sub-rede: 192.168.10.0/26;  Máscara: 255.255.255.192; 
+Capacidade: 62 hosts. \\
+Tal VLAN foi dimensionada para o cenário atual (8 usuários), com folga para expansão futura até aproximadamente 15 dispositivos, evitando necessidade de reendereçamento.
+
+\item \textbf{VLAN 20 — Data Science}  
+
+Sub-rede: 192.168.10.64/26;
+Máscara: 255.255.255.192;
+Capacidade:   hosts;\\
+Tal VLAN mantém padronização com a VLAN 10, pois possui perfil de uso e crescimento semelhante, facilitando planejamento e gestão da rede.
+
+\item \textbf{VLAN 30 — TI}  
+
+Sub-rede: 192.168.10.128/27;
+Máscara: 255.255.255.224;
+Capacidade: 30 hosts;\\
+Tal VLAN atende à equipe reduzida de TI (4 usuários), incluindo dispositivos administrativos e de gerenciamento, com margem suficiente sem desperdício de endereços.
+
+\item \textbf{VLAN 40 — Servidores}  
+
+Sub-rede: 192.168.10.160/29;
+Máscara: 255.255.255.248;
+Capacidade: 6 hosts;\\ 
+Tal VLAN tem segmento restrito para infraestrutura crítica, contendo o servidor principal e possíveis expansões controladas, aumentando segurança e controle de acesso.
+
+\item \textbf{VLAN 50 — Visitantes}  
+
+Sub-rede: 192.168.10.168/29  
+Máscara: 255.255.255.248  
+Capacidade: 6 hosts;\\
+Tal VLAN limita o número de dispositivos externos simultâneos, reduzindo impacto na rede interna e aumentando o controle sobre acessos não confiáveis.
+
+\end{itemize}
+
+
+
+\subsection{São Carlos: Filial Administrativa}
+
+A filial de São Carlos apresenta topologia espelhada à matriz, com estrutura
+hierárquica equivalente. O roteador \texttt{R-SCA-FILIAL} termina o link WAN e
+estabelece adjacência OSPF com \texttt{R-CPN-MATRIZ} na Área~0. O switch de core
+\texttt{SW-SCA-CORE} agrega os switches de acesso \texttt{SW-SCA-ADM} (VLANs
+administrativas) e \texttt{SW-SCA-ACC} (TI e visitantes). O \textit{access point}
+\texttt{AP-SCA-WIFI} serve a VLAN~90 de visitantes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{saocarlos.png}
+    \caption{Estrutura de rede proposta para a filial em São Carlos}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsubsection{Plano de Endereçamento IP -- São Carlos (VLSM)}
+O bloco \textbf{192.168.60.0/24} foi alocado deliberadamente distinto do espaço de
+Campinas, permitindo identificação geográfica imediata em tabelas de roteamento: um
+endereço 192.168.60.x indica inequivocamente um dispositivo em São Carlos.
+
+\begin{itemize}
+
+\item \textbf{VLAN 60 — Administrativo}  
+
+Sub-rede: 192.168.60.0/26;
+Máscara: 255.255.255.192;
+Capacidade: 62 hosts;\\ Esse é o segmento principal da filial, dimensionado para acomodar múltiplas áreas administrativas (RH, financeiro, marketing), com folga para crescimento sem necessidade de reestruturação.
+
+\item \textbf{VLAN 70 — TI Local}  
+
+Sub-rede: 192.168.60.64/26;
+Máscara: 255.255.255.192;
+Capacidade: 62 hosts ;\\
+Padronizada com a VLAN administrativa para simplificar gestão e suportar dispositivos de suporte, manutenção e possíveis expansões da equipe técnica local.
+
+\item \textbf{VLAN 80 — Gestão Executiva}  
+
+Sub-rede: 192.168.60.128/27;  
+Máscara: 255.255.255.224;  
+Capacidade: 30 hosts;\\  
+Tal segmento menor e mais controlado, destinado à equipe executiva, equilibrando capacidade suficiente com maior isolamento e segurança.
+
+\item \textbf{VLAN 90 — Visitantes}  
+
+Sub-rede: 192.168.60.160/28;
+Máscara: 255.255.255.240;
+Capacidade: 14 hosts;\\
+Foi dimensionada com maior capacidade em relação à matriz para suportar maior fluxo de clientes e acessos externos, mantendo isolamento da rede interna.
+
+\end{itemize}
+
+
+
+% =============================================================
+\section{Arquitetura de Rede}
+% =============================================================
+
+\subsection{Modelo Hierárquico de Três Camadas e Topologia Estrela Estendida}
+
+A arquitetura implementada fundamenta-se no modelo hierárquico de três camadas
+(Core, Distribuição e Acesso). Na camada de Core, os switches \texttt{SW-CPN-CORE}
+e \texttt{SW-SCA-CORE} concentram o transporte de tráfego entre segmentos locais,
+sem conectar dispositivos finais. A camada de Distribuição (\texttt{SW-CPN-ENG},
+\texttt{SW-SCA-ADM}) implementa as políticas de segmentação por VLANs. A camada de
+Acesso (\texttt{SW-CPN-ACC}, \texttt{SW-SCA-ACC}) conecta os dispositivos finais às
+suas respectivas VLANs.
+
+Fisicamente, a rede adota topologia Estrela Estendida, ou seja, cada switch de acesso
+conecta-se ao core por um único enlace de \textit{uplink}, e o roteador igualmente
+se conecta ao core. Essa configuração oferece isolamento de falhas (problema em um
+switch de acesso não afeta os demais segmentos), facilita monitoramento centralizado
+e simplifica o cabeamento. A alternativa de cascata (\textit{daisy-chain}) entre
+switches foi descartada por aumentar latência, criar pontos únicos de falha
+adicionais e esgotar rapidamente as interfaces do roteador.
+
+A inclusão de switches de core dedicados representa investimento estratégico dado que ao
+adicionar novos departamentos, basta conectar um novo switch ao core sem alterar a
+topologia existente. 
+
+
+\subsection{Roteamento Inter-VLAN via Router-on-a-Stick}
+
+Dispositivos em VLANs diferentes não conseguem se comunicar diretamente, pois estão separados na camada 2. Para permitir essa comunicação, utiliza-se o roteamento na camada 3.
+
+A técnica Router-on-a-Stick consiste em usar uma única interface física do roteador, dividida em subinterfaces lógicas. Cada subinterface é associada a uma VLAN e possui um endereço IP que funciona como gateway para os dispositivos daquela rede.
+
+Assim, quando um host da VLAN 10 (192.168.10.10) deseja se comunicar com um host da VLAN 20 (192.168.10.70), ele envia o pacote para o seu gateway (192.168.10.1). O roteador recebe esse pacote, realiza o roteamento e o envia de volta pela interface correspondente à VLAN 20, permitindo que o switch entregue ao destino.
+
+Esse modelo faz com que o tráfego passe pelo roteador, o que é adequado neste cenário, já que o volume de comunicação entre VLANs é baixo. Assim, evita-se a necessidade de switches de camada 3, que possuem maior custo.
+
+A configuração envolve a criação de subinterfaces no roteador, associando cada uma a uma VLAN específica e definindo seu respectivo endereço IP. Além disso, a conexão entre o roteador e o switch deve ser configurada como trunk, ou seja, um enlace capaz de transportar múltiplas VLANs simultaneamente por meio de marcação (tagging) nos quadros Ethernet.
+
+\begin{figure}[H]
+    \centering
+    
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{router-campinas.png}
+        \caption{Subinterfaces no roteador de Campinas}
+        \label{fig:router}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{trunk-camp.png}
+        \caption{Configuração do trunk no switch}
+        \label{fig:switch}
+    \end{subfigure}
+    
+    \caption{Implementação do roteamento inter-VLAN via Router-on-a-Stick}
+    \label{fig:intervlan}
+\end{figure}
+
+
+\subsection{Roteamento Dinâmico com OSPF}
+
+A interconexão WAN entre Campinas e São Carlos emprega OSPF (\textit{Open Shortest
+Path First}, RFC~2328), protocolo de estado de enlace preferível a rotas estáticas
+ou ao RIP pelas seguintes razões:
+
+\begin{itemize}
+    \item \textbf{Convergência rápida:} OSPF detecta falhas via Dead Interval
+    (padrão 40~s, configurável) e reconverge em poucos segundos, ao contrário do
+    RIP, cujas atualizações periódicas podem levar minutos.
+    \item \textbf{Escalabilidade automática:} a adição de uma nova filial (e.g.,
+    Ribeirão Preto) requer apenas configurar o novo roteador com OSPF; os roteadores
+    existentes aprendem as novas rotas dinamicamente, sem reconfigurações manuais.
+    \item \textbf{Interoperabilidade:} por ser protocolo aberto, ao contrário do
+    EIGRP (proprietário Cisco), o OSPF garante maior compatibilidade com equipamentos.
+\end{itemize}
+
+A implementação configura ambos os roteadores com \texttt{router ospf 1} e
+Router~IDs únicos (1.1.1.1 para Campinas, 2.2.2.2 para São Carlos). Por segurança,
+\texttt{passive-interface default} bloqueia o envio de Hellos em interfaces voltadas
+a hosts, com \texttt{no passive-interface GigabitEthernet7/0} habilitando o OSPF
+exclusivamente no enlace WAN.
+
+O principal risco do OSPF reside na complexidade de \textit{troubleshooting}:
+adjacências podem falhar por \textit{timer mismatch}, diferenças de MTU ou
+autenticação inconsistente. A mitigação inclui documentação das configurações,
+capacitação da equipe de TI e implementação de
+\textit{syslog} centralizado para auditoria de eventos de adjacência.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{osftp.png}
+    \caption{Visualização dos routers ID em ambas localidades.}
+    \label{fig:placeholder}
+\end{figure}
+\subsection{Segmentação por VLANs}
+
+A segmentação por VLANs (IEEE~802.1Q) subdivide a infraestrutura física em domínios
+de broadcast independentes, confinando tráfego intenso (ETL, frameworks de ML) a
+seus respectivos segmentos e impedindo sua propagação para outros departamentos.
+Cada VLAN tem justificativa funcional e de segurança:
+
+\begin{table}[H]
+\centering
+\caption{Justificativas de segmentação por VLAN}
+\label{tab:justificativas_vlan}
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+\textbf{VLAN} & \textbf{Segmento} & \textbf{Justificativa} \\ \midrule
+10 & Eng.\ de Dados (CPN) &
+    Isola tráfego intenso de ETL e Apache Spark dos demais departamentos \\
+20 & Data Science (CPN) &
+    Isola tráfego de frameworks de ML (TensorFlow) e treinamento distribuído \\
+30 & TI (CPN) &
+    Protege acesso SSH a equipamentos e ferramentas de monitoramento \\
+40 & Servidores (CPN) &
+    DMZ interna; viabiliza ACLs granulares e isolamento do servidor corporativo \\
+50 & Visitantes (CPN) &
+    Dispositivos não confiáveis; isolamento total das VLANs corporativas \\
+60 & Administrativo (SCA) &
+    Concentra RH, Financeiro e Marketing na filial \\
+70 & TI Local (SCA) &
+    Gestão de infraestrutura local e acesso remoto a equipamentos \\
+80 & Gestão Executiva (SCA) &
+    Isolamento de acesso executivo por perfil de segurança \\
+90 & Visitantes (SCA) &
+    Idem VLAN~50; /28 para suportar maior fluxo de clientes na unidade comercial \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+Operacionalmente, as portas dos switches são configuradas como \textit{access}
+(uma VLAN por porta, para dispositivos finais) ou \textit{trunk} (múltiplas VLANs
+tagged, para enlaces entre switches e roteador). Os comandos \texttt{show vlan brief}
+e \texttt{show interfaces trunk} permitem auditar, respectivamente, a associação
+porta-VLAN e as VLANs permitidas em cada trunk.
+
+% =============================================================
+\section{Serviços de Rede Centralizados: DHCP, DNS e IP Helper, HTTP, FTP, SMTP}
+% =============================================================
+
+Todos os serviços de rede (DHCP, DNS, HTTP, FTP, SMTP) estão centralizados no
+servidor \texttt{SRV-CPN-DATA} (IP 192.168.10.162, VLAN~40), hospedado em
+hipervisor com máquinas virtuais dedicadas por serviço. Essa centralização elimina
+a necessidade de replicação de hardware em São Carlos, reduzindo custos e
+simplificando manutenção -- patches, backups e atualizações concentram-se em um
+único ponto. O risco inerente de ponto único de falha é abordado na
+Seção~\ref{sec:riscos}.
+
+\subsection{DHCP e IP Helper Address}
+O protocolo DHCP (\textit{Dynamic Host Configuration Protocol}) foi implementado para automatizar a distribuição de parâmetros de rede, mitigando conflitos de endereçamento e otimizando a gestão dos dispositivos da Kodalabs. O processo opera através do ciclo DORA (\textit{Discover, Offer, Request, Acknowledge}), fornecendo de forma centralizada o endereço IP, máscara de sub-rede, \textit{default gateway}, servidores DNS e o sufixo de domínio \texttt{kodalabs.com.br}.
+
+Visto que as mensagens de \textit{DHCP Discover} são transmitidas via \textit{broadcast} limitado ($255.255.255.255$), estas são naturalmente bloqueadas pelas interfaces de Camada 3 do roteador, restringindo o alcance do serviço ao domínio de difusão local. Para transpor essa limitação sem a necessidade de múltiplos servidores, utilizou-se a técnica de DHCP Relay via comando \texttt{ip helper-address}.
+
+Configurado em cada subinterface lógica do roteador, o comando \texttt{ip helper-address 192.168.10.162} atua como um agente de retransmissão (RFC 1542). Ao interceptar um \textit{broadcast} de solicitação, o roteador converte o pacote em um tráfego \textit{unicast} direcionado ao servidor DHCP centralizado em Campinas. Crucialmente, o roteador preenche o campo GIADDR (\textit{Gateway IP Address}) com o endereço IP da subinterface de origem; essa informação permite que o servidor DHCP identifique de qual VLAN a requisição partiu e selecione o \textit{pool} de endereçamento correspondente. Essa arquitetura permite que o roteador \texttt{R-SCA-FILIAL} encaminhe requisições de São Carlos via protocolo OSPF até o servidor central, consolidando a gestão de todas as nove VLANs em um único ponto de controle.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{runningconfig.png}
+    \caption{Configuração das subinterfaces no roteador de Campinas, evidenciando o uso de \textit{IP Helper Address} nas VLANs de usuários. Observa-se que a VLAN 40 não possui essa configuração por abrigar o servidor DHCP.}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{DNS e HTTP}
+
+O servidor DNS opera em modo \textit{split-horizon}: resolve consultas do domínio
+interno \texttt{kodalabs.com.br} e encaminha consultas externas para resolvedores
+públicos (8.8.8.8), cacheando as respostas para reduzir latência e tráfego WAN.
+
+
+
+A integração com o DHCP é fundamental: o servidor distribui automaticamente os
+parâmetros \texttt{dns-server 192.168.10.162} e \texttt{domain-name
+kodalabs.com.br}, de modo que todos os dispositivos adotam o DNS corporativo como
+resolver primário e resolvem nomes curtos com
+expansão automática do sufixo de domínio. Como mitigação ao ponto único de falha, o
+DNS secundário externo (8.8.8.8) é listado como segunda opção nas configurações
+DHCP.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{dns.png}
+    \caption{Teste de resolução de nomes utilizando o comando \texttt{nslookup}, evidenciando a tradução do domínio \texttt{www.kodalabs.com.br
+} para o endereço IP do servidor por meio do DNS interno.}
+    \label{fig:placeholder}
+\end{figure}
+
+
+O serviço HTTP é disponibilizado pelo servidor centralizado \texttt{SRV-CPN-DATA},
+permitindo o acesso a aplicações web internas da empresa. Esse serviço é utilizado
+para hospedagem de páginas institucionais, painéis de monitoramento e possíveis
+interfaces de sistemas corporativos.
+
+Os dispositivos da filial de São Carlos acessam o servidor HTTP por meio da rede
+WAN, cuja conectividade é garantida pelo protocolo de roteamento OSPF.
+
+O acesso é realizado por meio de nomes de domínio resolvidos pelo DNS interno,
+como \texttt{www.kodalabs.com.br}, abstraindo o uso direto de endereços IP e
+facilitando a usabilidade para os usuários finais.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{HTTP.png}
+    \caption{Acesso ao servidor web interno por meio do domínio \texttt{www.kodalabs.com.br
+}, evidenciando o funcionamento do serviço HTTP na rede.}
+    \label{fig:placeholder}
+\end{figure}
+
+
+\subsection{FTP}
+
+O serviço FTP (File Transfer Protocol) é utilizado para transferência de arquivos
+entre clientes e o servidor centralizado, sendo útil para envio de relatórios,
+backup de dados e compartilhamento de arquivos entre equipes.
+
+O servidor FTP está hospedado no \texttt{SRV-CPN-DATA}, permitindo que usuários de
+ambas as localidades acessem os arquivos de forma centralizada. A comunicação é
+realizada sobre TCP, garantindo confiabilidade na transferência dos dados.
+
+Assim como os demais serviços, o acesso ao FTP é facilitado pela resolução de nomes
+via DNS interno, utilizando o domínio \texttt{ftp.kodalabs.com.br}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{sftp.png}
+    \caption{Acesso ao servidor FTP por meio do domínio \texttt{ftp.kodalabs.com.br}, evidenciando o funcionamento do serviço de transferência de arquivos.}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{SMTP}
+
+O serviço SMTP (Simple Mail Transfer Protocol) é responsável pelo envio de
+mensagens eletrônicas na rede corporativa. O servidor de e-mail está hospedado no
+\texttt{SRV-CPN-DATA}, permitindo a centralização das comunicações internas da
+empresa.
+
+Os clientes utilizam o domínio \texttt{smtp.kodalabs.com.br} para envio de e-mails,
+com suporte a resolução de nomes via DNS interno. Esse modelo permite que usuários
+de diferentes localidades utilizem o serviço de forma transparente.
+
+A centralização do serviço facilita o gerenciamento de contas, políticas de
+segurança e armazenamento de mensagens, além de simplificar processos de backup e
+auditoria.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{email.png}
+    \caption{Envio e recebimento de mensagem eletrônica utilizando o servidor SMTP interno \texttt{smtp.kodalabs.com.br}, evidenciando o funcionamento do serviço de correio eletrônico.}
+    \label{fig:placeholder}
+\end{figure}
+
+% =============================================================
+\section{Justificativa Estratégica e Análise de Riscos}
+\label{sec:riscos}
+% =============================================================
+
+\subsection{Servidor Centralizado}
+
+Nota-se que a centralização de serviços em servidor único em Campinas oferece economia de hardware, já que um segundo servidor em São Carlos custaria
+R\$~8.000--12.000 sem benefício proporcional, dado o baixo volume de serviços na
+filial; Além disso, favorece a simplicidade operacional e consistência, pois  patches, backups e atualizações concentram-se
+em um único ponto e todos os usuários
+acessam a mesma versão dos serviços.
+
+O risco primário é a indisponibilidade total dos serviços em caso de falha do
+servidor. A abordagem intermediária adotada, adequada ao porte atual da empresa,
+inclui: backups diários com imagens completas armazenadas em NAS ou nuvem; contrato
+de SLA com reposição de hardware em até 4~horas; e aumento do lease time DHCP para
+7~dias, garantindo que hosts já configurados operem norm
+almente durante interrupções
+curtas. A solução definitiva (servidor secundário em São Carlos com DHCP w transferência de zona DNS) é recomendada quando o crescimento
+da empresa justificar o investimento adicional.
+
+\subsection{Switches de Core}
+Os switches de core representam custo adicional de aproximadamente R\$~5.600, mas
+trazem benefícios que se materializam no crescimento. Com core dedicado: novos
+switches podem ser adicionados sem alterar a topologia existente; a função de
+switching de camada~2 é isolada do roteador, que pode dedicar recursos ao OSPF.
+Sem core, a cascata entre switches limitaria rapidamente as interfaces do
+roteador e exigiria redesenho completo da rede para expansão.
+
+O risco de ponto único de falha do próprio switch de core é mitigado com
+equipamento empresarial em ambiente controlado, conectado a no-break e com
+configuração salva para restauração rápida.
+
+\subsection{OSPF}
+
+Com OSPF, a adição de uma nova filial exige apenas configurar o novo roteador; os
+roteadores existentes aprendem as rotas automaticamente. Com rotas estáticas, cada
+roteador em operação precisaria ser editado manualmente, ou seja, há a necessidade de realizar uma operação trabalhosa e
+propensa a erros. 
+
+O risco do OSPF está na complexidade de \textit{troubleshooting}
+(falhas de adjacência por MTU mismatch, \textit{timer mismatch} ou autenticação
+inconsistente) e no consumo de CPU em redes muito grandes. Na escala atual da
+Kodalabs (2~roteadores, 10~sub-redes), esse overhead é desprezível. A
+mitigação inclui capacitação da equipe em OSPF e \textit{syslog} centralizado para
+auditoria de adjacências.
+
+
+
+% =============================================================
+\section{Análise de Viabilidade Financeira e Equipamentos}
+% =============================================================
+
+A composição do orçamento deste projeto reflete a necessidade de uma infraestrutura robusta, capaz de suportar alta disponibilidade e segurança para os dados da organização. Os custos foram levantados com base em valores médios de mercado para equipamentos de linha corporativa (Enterprise), garantindo vida útil prolongada e suporte técnico especializado.
+
+\subsection{Detalhamento dos Investimentos}
+
+O investimento em hardware totaliza R\$ 213.900,00, distribuído conforme a criticidade de cada segmento:
+
+\begin{itemize}
+    \item \textbf{Núcleo de Rede e Conectividade:} Foram selecionados roteadores e switches com suporte a protocolos avançados (como OSPF e VLANs 802.1Q). O uso de equipamentos de alta performance justifica o valor de R\$ 31.900,00 nesta categoria.
+    \item \textbf{Processamento e Armazenamento:} O servidor centralizado (R\$ 31.000,00) foi dimensionado para suportar virtualização e serviços críticos de rede, incluindo o sistema de gestão planejado.
+    \item \textbf{Infraestrutura e Continuidade:} O investimento em racks, patch panels e no-breaks senoidais (R\$ 24.000,00) é fundamental para a organização física e proteção contra surtos elétricos ou quedas de energia.
+    \item \textbf{Terminais de Usuário:} Composto por desktops, laptops e dispositivos móveis para as equipes administrativa e operacional.
+\end{itemize}
+
+\subsection{Resumo Orçamentário}
+
+Para o cálculo do valor final, aplicou-se o  BDI (Benefício e Despesas Indiretas) de 30\% sobre o custo dos equipamentos. Este percentual cobre custos fixos, administração central, impostos e a margem de lucro prevista para a execução.
+
+\begin{table}[htbp]
+\centering
+\caption{Consolidado Financeiro do Projeto}
+\begin{tabular}{|l|r|}
+\hline
+\textbf{Categoria} & \textbf{Valor (R\$)} \\ \hline
+Custo Total de Equipamentos & 213.900,00 \\ \hline
+BDI (30\% sobre Equipamentos) & 64.170,00 \\ \hline
+Mão de Obra e Serviços de Instalação & 18.400,00 \\ \hline
+\textbf{VALOR TOTAL DO PROJETO} & \textbf{278.470,00} \\ \hline
+\end{tabular}
+\end{table}
+
+
+% =============================================================
+\section{Conclusão}
+% =============================================================
+
+O projeto de infraestrutura de rede desenvolvido para a Kodalabs foi desenvolvida pensando nas necessidades específicas da empresa e, principalmente, para seguir um padrão de projeto que facilitasse a escalabilidade em futuras filiais. A adoção do VLSM (Variable Length Subnet Masking) e a segmentação lógica via VLANs  permitiu também uma gestão mais eficiente e segura do espaço de endereçamento IP, mitigando domínios de broadcast excessivos e isolando fluxos de dados sensíveis.
+Nota-se também que a escolha da técnica Router-on-a-Stick para o roteamento inter-VLAN, aliada ao protocolo de roteamento dinâmico OSPF, conferiu à rede maior agilidade operacional, uma vez que possibilita melhor aproveitamento das interfaces físicas do roteador, reduzindo custos de hardware. Além disso, o uso do OSPF garante convergência automática e maior resiliência da topologia frente a possíveis falhas em enlaces críticos.
+
+Os protocolos de serviço, especificamente o DHCP com o auxílio do IP Helper Address, provaram-se vitais para a escalabilidade do ambiente, permitindo que a administração de novos hosts ocorra de forma transparente e centralizada. 
+
+Sob a ótica financeira e estratégica, o investimento de aproximadamente R\$ 278.000,00 (considerando equipamentos, serviços e BDI) posiciona a Kodalabs em um patamar de maturidade tecnológica superior. A arquitetura hierárquica em estrela estendida não apenas atende às demandas imediatas, mas estabelece uma base sólida para a expansão futura (escalabilidade horizontal) e a implementação de políticas de QoS ou segurança perimetral mais rigorosas. 
+
+
+
+% =============================================================
+\section{Parte 2 — Comunicação entre Filiais (Projeto 2 - SSC0540)}
+% =============================================================
+
+\subsection{Contexto e Evolução do Projeto}
+
+O Projeto~2 representa a evolução natural da infraestrutura concebida no Projeto~1,
+expandindo o escopo de uma rede corporativa local para uma arquitetura de comunicação
+integrada entre filiais. Enquanto o projeto anterior focou na segmentação interna e
+nos serviços centralizados em Campinas, o presente projeto introduz três vetores de
+expansão: (i)~a interligação das unidades de Campinas e São Carlos por meio de
+roteamento dinâmico multi-área; (ii)~a centralização de todos os serviços em um
+Data Center compartilhado de natureza \textit{cloud} privada, arquiteticamente
+neutro em relação às filiais; e (iii)~a incorporação de dispositivos de Internet das
+Coisas (\textit{IoT}) em cada localidade, ampliando a automação e o monitoramento
+das instalações físicas.
+
+A motivação para a adoção do modelo de \textit{cloud} privada reside na
+independência operacional: o Data Center não pertence a nenhuma das filiais,
+funcionando como infraestrutura compartilhada que provê serviços de forma
+equitativa a Campinas e São Carlos. Essa neutralidade facilita futuras expansões
+para novas unidades (e.g., Ribeirão Preto, São Paulo) sem impacto na topologia já
+existente.
+
+% -------------------------------------------------------
+\subsection{Data Center Compartilhado}
+% -------------------------------------------------------
+
+O Data Center R-DC-CLOUD centraliza os seguintes serviços corporativos:
+HTTP, FTP, SMTP, DNS, DHCP e IoT. O servidor de serviços localizado na sub-rede
+    192.168.100.\\0/29 hospeda virtualmente cada um desses serviços, enquanto a
+rede interna do Data Center opera no bloco \textbf{10.0.0.1/24}.
+
+A centralização do serviço DHCP no Data Center elimina a necessidade de servidores
+DHCP locais nas filiais. As requisições originadas nas VLANs de Campinas e São
+Carlos são encaminhadas via \textit{relay} (\texttt{ip helper-address}) pelos
+respectivos roteadores (\texttt{R-CPN-01} e \texttt{R-SCA-01}) até o servidor
+central, conforme o mecanismo descrito na Seção~4.1 deste relatório para a versão
+anterior do projeto.
+
+A justificativa arquitetural para a neutralidade do Data Center é técnica e
+estratégica: ao operar exclusivamente na Área~0 do OSPF (backbone), o
+\texttt{R-DC-CLOUD} recebe as rotas resumidas de ambas as filiais por meio dos
+roteadores de borda (ABRs), sem precisar conhecer a topologia interna de cada área.
+Isso reduz a complexidade do banco de dados de estado de enlace (\textit{LSDB}) no
+Data Center e simplifica sua manutenção.
+
+% =============================================================
+\subsection{VLANs — Justificativa da Segmentação para a Kodalabs}
+% =============================================================
+
+A divisão da rede em VLANs distintas para cada departamento reflete diretamente
+a heterogeneidade funcional e de risco que caracteriza as equipes da Kodalabs.
+Embora todos os colaboradores pertençam à mesma organização, os perfis de tráfego,
+os níveis de confiabilidade dos dispositivos e as exigências de segurança variam
+substancialmente entre departamentos. Colocar todas as equipes na mesma rede plana
+seria equivalente a não ter segmentação alguma: um único dispositivo comprometido
+teria visibilidade irrestrita sobre toda a infraestrutura.
+
+\subsubsection{Por que separar Engenharia de Dados e Data Science?}
+
+As equipes técnicas de Campinas (VLANs~10 e~20) geram volumes expressivos de
+tráfego interno: transferências de datasets, sincronização de repositórios Git,
+execução distribuída de pipelines Spark e comunicação entre nós de treinamento de
+modelos. Se esse tráfego não fosse isolado, ele consumiria banda e aumentaria a
+taxa de colisões de broadcast nas redes administrativas, degradando a experiência
+de usuários que realizam tarefas leves como envio de e-mail e acesso a sistemas ERP.
+A separação em VLANs distintas garante que o tráfego intensivo das equipes técnicas
+fique confinado ao seu próprio domínio de broadcast, sem impacto nos demais
+segmentos.
+
+\subsubsection{Por que isolar a equipe de TI?}
+
+A VLAN~30 de TI em Campinas e a VLAN~70 de TI em São Carlos concentram os
+dispositivos com maior nível de privilégio na rede: estações de gerenciamento com
+acesso SSH a roteadores e switches, ferramentas de monitoramento como SNMP e
+\textit{syslog}, e credenciais administrativas de sistemas. Misturar esses
+dispositivos com VLANs de usuários comuns criaria um vetor de ataque direto: um
+colaborador mal-intencionado ou um dispositivo comprometido na VLAN de Engenharia
+poderia, em uma rede plana, tentar acessar as ferramentas de gerenciamento da
+equipe de TI por varredura simples de portas. O isolamento em VLAN dedicada, com
+ACLs específicas, restringe esse acesso apenas aos dispositivos autorizados.
+
+\subsubsection{Por que uma VLAN dedicada para servidores?}
+
+A VLAN~40 de Campinas isola o servidor \texttt{SRV-CPN-DATA} em um segmento
+de acesso controlado. Servidores que hospedam dados de clientes — especialmente
+sob as obrigações da LGPD — não devem ser acessíveis diretamente por todos os
+segmentos da rede. Ao concentrá-los em VLAN própria, é possível aplicar ACLs
+granulares que determinam exatamente quais VLANs podem iniciar conexões aos
+serviços (HTTP, FTP, SMTP) e em quais portas. Isso implementa o princípio de
+\textit{least privilege} na camada de rede: nenhum dispositivo acessa o servidor
+além do estritamente necessário para sua função.
+
+\subsubsection{Por que isolar visitantes?}
+
+As VLANs~50 (Campinas) e~90 (São Carlos) segregam dispositivos externos —
+notebooks pessoais de clientes, smartphones de visitantes, equipamentos de
+prestadores de serviço — que não passaram por nenhum processo de homologação de
+segurança da Kodalabs. Esses dispositivos podem carregar malware, estar
+desatualizados ou ser utilizados por pessoas com interesses contrários à empresa.
+Em uma rede plana, um visitante conectado ao Wi-Fi teria acesso potencial a todos
+os outros dispositivos da rede. Com a VLAN de visitantes, o acesso é restrito
+exclusivamente à saída para a internet, sem visibilidade sobre qualquer recurso
+corporativo interno.
+
+\subsubsection{Separação geográfica: Campinas vs.\ São Carlos}
+
+A adoção de blocos de endereçamento distintos — 192.168.10.0/24 para Campinas e
+192.168.60.0/24 para São Carlos — não é apenas uma convenção de organização. Ela
+permite que as tabelas de roteamento e as ACLs sejam escritas de forma
+geograficamente semântica: uma regra que referencie \texttt{192.168.60.0/24}
+aplica-se inequivocamente à filial de São Carlos, facilitando auditoria, diagnóstico
+e expansão futura. Quando uma nova filial for adicionada (e.g., Ribeirão Preto com
+bloco 192.168.80.0/24), a identidade geográfica de cada bloco se mantém clara sem
+necessidade de reestruturação do esquema de endereçamento.
+
+% -------------------------------------------------------
+\subsection{Roteamento Inter-VLAN}
+% -------------------------------------------------------
+
+O roteamento inter-VLAN mantém a técnica \textit{Router-on-a-Stick} com
+subinterfaces lógicas 802.1Q, conforme implementado no Projeto~1 e detalhado na
+Seção~3.2. Cada subinterface é associada à VLAN correspondente e atua como
+\textit{gateway} padrão para os dispositivos daquele segmento. O enlace entre
+roteador e switch de core permanece configurado como \textit{trunk}, transportando
+todas as VLANs simultaneamente por meio de marcação nos quadros Ethernet.
+
+Não foi introduzido switch multilayer na topologia do Projeto~2; o modelo
+\textit{Router-on-a-Stick} se mantém adequado ao volume de tráfego inter-VLAN
+atual da organização.
+
+% -------------------------------------------------------
+\subsection{Roteamento Dinâmico OSPF Multi-Área}
+% -------------------------------------------------------
+
+\subsubsection{Arquitetura de Áreas}
+
+O Projeto~2 evolui o OSPF de área única para uma arquitetura \textbf{multi-área},
+dividindo o domínio de roteamento em três áreas distintas conforme representado na
+Tabela~\ref{tab:ospf_areas}.
+
+\begin{table}[H]
+\centering
+\caption{Estrutura de áreas OSPF do Projeto 2}
+\label{tab:ospf_areas}
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+\textbf{Área OSPF} & \textbf{Função} & \textbf{Roteadores participantes} \\ \midrule
+Área 0 (backbone) & Interconexão entre filiais e Data Center &
+    R-CPN-01, R-SCA-01, R-DC-CLOUD \\
+Área 1 & Rede interna de Campinas &
+    R-CPN-01 (ABR) \\
+Área 2 & Rede interna de São Carlos &
+    R-SCA-01 (ABR) \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Endereçamento OSPF por Roteador}
+
+\paragraph{Campinas — R-CPN-01 (ABR Área~1 $\leftrightarrow$ Área~0)}
+
+O roteador \texttt{R-CPN-01} atua como \textit{Area Border Router} (ABR) entre a
+Área~1 (rede interna de Campinas) e a Área~0 (backbone). Suas interfaces e redes
+OSPF são as seguintes:
+
+\begin{itemize}
+    \item \textbf{Área 0:}
+    \begin{itemize}
+        \item 11.0.0.0/30 — IP local 11.0.0.1/30 (interface Gig7/0, enlace ao R-DC-CLOUD)
+        \item 11.0.0.4/30 — IP local 11.0.0.5/30 (interface Gig8/0, enlace ao R-DC-CLOUD)
+    \end{itemize}
+    \item \textbf{Área 1} (redes internas de Campinas anunciadas pelo ABR):
+    \begin{itemize}
+        \item 192.168.10.0/26 — VLAN 10 (Engenharia de Dados)
+        \item 192.168.10.64/26 — VLAN 20 (Data Science)
+        \item 192.168.10.128/27 — VLAN 30 (TI)
+        \item 192.168.10.160/29 — VLAN 40 (Servidores)
+        \item 192.168.10.168/29 — VLAN 50 (Visitantes)
+    \end{itemize}
+\end{itemize}
+
+\paragraph{São Carlos — R-SCA-01 (ABR Área~2 $\leftrightarrow$ Área~0)}
+
+O roteador \texttt{R-SCA-01} atua como ABR entre a Área~2 (rede interna de São
+Carlos) e a Área~0. Suas interfaces e redes OSPF são:
+
+\begin{itemize}
+    \item \textbf{Área 0:}
+    \begin{itemize}
+        \item 11.0.0.0/30 — IP local 11.0.0.2/30 (interface Gig7/0)
+        \item 11.0.0.8/30 — IP local 11.0.0.9/30 (interface Gig9/0)
+    \end{itemize}
+    \item \textbf{Área 2} (redes internas de São Carlos):
+    \begin{itemize}
+        \item 192.168.60.0/26 — VLAN 60 (Administrativo)
+        \item 192.168.60.64/26 — VLAN 70 (TI Local)
+        \item 192.168.60.128/27 — VLAN 80 (Gestão Executiva)
+        \item 192.168.60.160/28 — VLAN 90 (Visitantes)
+        \item 192.168.60.176/28 — não especificado no ambiente
+    \end{itemize}
+\end{itemize}
+
+\paragraph{Data Center — R-DC-CLOUD (Roteador interno da Área~0)}
+
+O \texttt{R-DC-CLOUD} opera \textbf{exclusivamente na Área~0}, não exercendo função
+de ABR. Suas redes OSPF são:
+
+\begin{itemize}
+    \item 11.0.0.4/30 — IP local 11.0.0.6/30 (enlace para R-CPN-01 via Gig8/0)
+    \item 11.0.0.8/30 — IP local 11.0.0.10/30 (enlace para R-SCA-01 via Gig9/0)
+    \item 10.0.0.1/24 — rede interna do Data Center
+    \item 192.168.100.0/29 — sub-rede dos servidores do Data Center
+\end{itemize}
+
+Por operar somente na Área~0, o \texttt{R-DC-CLOUD} recebe as rotas inter-área
+originadas nas Áreas~1 e~2 como LSAs Tipo~3 (\textit{Summary LSA}), gerados e
+injetados no backbone pelos respectivos ABRs. Isso reduz o volume de informações de
+estado de enlace que o Data Center precisa processar.
+
+\subsubsection{Benefícios da Divisão em Múltiplas Áreas}
+
+A segmentação do domínio OSPF em três áreas traz os seguintes benefícios técnicos:
+
+\begin{itemize}
+    \item \textbf{Redução do domínio de \textit{flooding}:} LSAs Tipo~1 e~2
+    (Router LSA e Network LSA) são confinados à área de origem. Uma mudança de
+    topologia interna em Campinas, por exemplo, gera \textit{flooding} apenas na
+    Área~1, sem sobrecarregar os roteadores da Área~0 ou da Área~2.
+    \item \textbf{Isolamento de falhas por área:} instabilidades em uma área não
+    provocam recálculo de SPF nas demais, aumentando a estabilidade global do
+    roteamento.
+    \item \textbf{Convergência mais eficiente:} o banco de dados de estado de enlace
+    (LSDB) de cada roteador é menor, pois contém apenas os LSAs de sua(s) área(s)
+    local(is) mais os resumos inter-área. Isso reduz o tempo de cálculo do algoritmo
+    SPF (\textit{Shortest Path First}).
+    \item \textbf{Escalabilidade:} a adição de uma nova filial requer apenas a criação de uma nova área (Área~3), sem impactar as
+    configurações das áreas existentes.
+\end{itemize}
+
+% =============================================================
+\subsection{Segurança — Justificativa das ACLs para a Kodalabs}
+% =============================================================
+
+As Listas de Controle de Acesso (ACLs) implementadas no Projeto~2 são o mecanismo
+que transforma a segmentação por VLANs de uma medida de organização em uma medida
+efetiva de segurança. VLANs por si só separam domínios de broadcast na camada~2,
+mas o tráfego entre VLANs é roteado na camada~3 pelo roteador. Sem ACLs, qualquer
+dispositivo poderia potencialmente alcançar qualquer outro segmento da rede,
+bastando que exista uma rota válida. As ACLs definem explicitamente quem pode falar
+com quem, aplicando o princípio de \textit{least privilege} no nível do roteamento.
+
+\subsubsection{ACL de Proteção da Infraestrutura IoT}
+
+A ACL aplicada ao servidor \texttt{SRV-IOT} (192.168.100.3) é a medida de
+segurança mais crítica do Projeto~2, e sua justificativa combina argumentos
+técnicos e de segurança física.
+
+Do ponto de vista técnico, os dispositivos IoT controlados pelo servidor — sensores
+de fumaça, detectores de movimento e atuadores de ventilação — são
+\textbf{atuadores físicos} além de simples coletores de dados. Acesso não
+autorizado ao servidor IoT poderia permitir: desativação remota de sensores de
+fumaça (eliminando proteção contra incêndio); geração de falsos alertas de movimento
+(esgotando a atenção da equipe de segurança); ou manipulação dos atuadores de
+ventilação (causando superaquecimento intencional de equipamentos). Essas ameaças
+têm consequências físicas reais, não apenas digitais.
+
+Do ponto de vista corporativo, a Kodalabs é uma empresa de consultoria de dados
+que preza pela confiabilidade de sua infraestrutura perante clientes. Um incidente
+causado por acesso indevido à plataforma IoT — especialmente se explorado por um
+visitante conectado ao Wi-Fi — representaria falha grave de governança, com
+potencial impacto reputacional e legal.
+
+A política de ACL implementada é objetiva:
+
+\begin{itemize}
+    \item \textbf{Permitido:} sub-rede 192.168.10.128/27 (VLAN~30, TI de Campinas)
+    — os responsáveis técnicos pela infraestrutura de Campinas têm acesso legítimo
+    e necessário à plataforma IoT para configuração, monitoramento e resposta a
+    incidentes.
+    \item \textbf{Permitido:} sub-rede 192.168.60.64/26 (VLAN~70, TI de São Carlos)
+    — a equipe técnica local de São Carlos precisa gerenciar os sensores de sua
+    própria unidade e acompanhar o painel centralizado de monitoramento.
+    \item \textbf{Negado explicitamente:} todas as demais sub-redes, incluindo
+    VLANs de visitantes (192.168.10.168/29 e 192.168.60.160/28), VLANs
+    administrativas, VLANs de engenharia e Data Science. Nenhum desses perfis
+    tem justificativa funcional para interagir diretamente com a plataforma IoT.
+\end{itemize}
+
+A negação explícita dos visitantes merece destaque especial: visitantes conectados
+ao Wi-Fi corporativo são, por definição, entidades não verificadas. Permitir que
+um dispositivo de visitante acesse o servidor IoT — ainda que inadvertidamente —
+seria equivalente a deixar a chave do painel de controle de segurança física em
+local público. A ACL garante que, independentemente de qualquer falha de
+configuração de VLAN, o servidor IoT só responda a endereços de origem pertencentes
+às sub-redes de TI autorizadas.
+
+\subsubsection{Alinhamento com a LGPD e Governança Corporativa}
+
+As ACLs implementadas no Projeto~2 não são apenas medidas técnicas: elas constituem
+controles de segurança documentáveis para fins de conformidade com a Lei Geral de
+Proteção de Dados (LGPD). O art.~46 da LGPD exige que os agentes de tratamento
+adotem medidas técnicas e administrativas aptas a proteger os dados pessoais de
+acessos não autorizados. A segmentação por VLANs combinada com ACLs representa
+exatamente esse conjunto de medidas: cada política de controle de acesso pode ser
+auditada, documentada e apresentada como evidência de conformidade em eventuais
+fiscalizações pela ANPD (Autoridade Nacional de Proteção de Dados).
+
+% =============================================================
+\subsection{IoT — Justificativa dos Sensores para a Kodalabs}
+% =============================================================
+
+A adoção de dispositivos IoT na infraestrutura da Kodalabs não é uma escolha
+meramente tecnológica, mas uma decisão estratégica diretamente vinculada ao perfil
+operacional da empresa. Como consultoria de engenharia e ciência de dados, a
+Kodalabs mantém equipamentos de alto valor computacional em operação contínua —
+servidores, workstations de processamento intensivo e infraestrutura de rede —,
+cujo funcionamento ininterrupto é condição essencial para a entrega dos serviços
+aos clientes. Nesse contexto, os sensores IoT implantados cumprem três funções
+críticas: \textbf{proteção patrimonial}, \textbf{continuidade operacional} e
+\textbf{rastreabilidade de eventos físicos}.
+
+\subsubsection{Sensor de Fumaça}
+
+O sensor de fumaça é o dispositivo de maior criticidade para a Kodalabs. A empresa
+opera com infraestrutura de servidores em regime 24/7, e ambientes de alta densidade
+de equipamentos eletrônicos são particularmente suscetíveis a princípios de
+incêndio causados por superaquecimento, falhas em fontes de alimentação ou curtos
+em cabeamentos. Em uma consultoria de dados, um incêndio na sala de servidores
+representa não apenas perda de hardware — substituível —, mas potencial destruição
+de dados de clientes em processamento, o que pode resultar em violação de contratos,
+penalidades por descumprimento da LGPD e dano irreparável à reputação da empresa.
+
+O sensor de fumaça integrado à plataforma IoT do Data Center permite a detecção
+precoce de anomalias, acionando alertas automáticos para a equipe de TI antes que
+o evento se agrave. Isso reduz drasticamente o tempo de resposta em comparação a
+sistemas de detecção convencionais não integrados à rede.
+
+\subsubsection{Sensor de Movimento}
+
+O sensor de movimento, implantado em São Carlos, atende a uma necessidade
+específica da filial administrativa: o controle de acesso a áreas restritas fora
+do horário comercial. A unidade de São Carlos concentra dados financeiros,
+contratos com clientes e informações estratégicas da área comercial. O acesso
+físico não autorizado a essa infraestrutura representa risco tanto de espionagem
+corporativa quanto de sabotagem intencional.
+
+A integração do sensor de movimento com a plataforma IoT central permite o registro
+automático de eventos de presença, com \textit{timestamp} auditável, geração de
+alertas em tempo real para os responsáveis de TI e eventual integração futura com
+sistemas de controle de acesso físico (travas eletrônicas, câmeras IP). Para uma
+empresa que trata dados sensíveis de clientes sob as obrigações da LGPD, a
+rastreabilidade de quem acessou fisicamente os ambientes de infraestrutura é
+também um requisito de conformidade.
+
+\subsubsection{Atuadores de Ventilação}
+
+Os atuadores de ventilação (fans) presentes em ambas as filiais respondem a um
+desafio técnico concreto da Kodalabs: o gerenciamento térmico dos ambientes de
+processamento. Workstations de engenharia de dados e ciência de dados executam
+cargas computacionais intensas — pipelines ETL, treinamento de modelos de
+\textit{machine learning}, processamento de grandes volumes de dados —, gerando
+calor significativo de forma intermitente e imprevisível.
+
+O controle manual de ventilação seria ineficiente e dependeria de presença física
+constante. Com os atuadores integrados à plataforma IoT, é possível programar
+regras automáticas (e.g., acionar ventilação adicional quando sensor de temperatura
+exceder limite definido) ou controlar os dispositivos remotamente via interface web.
+Isso reduz o risco de falha por superaquecimento, prolonga a vida útil dos
+equipamentos e elimina a dependência de intervenção humana para eventos térmicos
+que ocorrem fora do horário de expediente.
+
+Em síntese, os três tipos de sensores escolhidos — fumaça, movimento e ventilação —
+não foram selecionados aleatoriamente: cada um endereça um risco operacional real
+e documentado do modelo de negócio da Kodalabs, tornando a infraestrutura IoT um
+componente funcional da gestão de riscos da empresa.
+
+% -------------------------------------------------------
+\subsection{Troubleshooting}
+% -------------------------------------------------------
+
+Os procedimentos de diagnóstico identificados durante a implementação do Projeto~2
+são descritos a seguir, com base nas situações reais documentadas no ambiente
+Packet Tracer.
+
+\begin{itemize}
+    \item \textbf{VLANs incorretas:} erros de associação porta-VLAN foram verificados
+    com \texttt{show vlan brief}, que lista cada VLAN e as portas a ela associadas.
+    A inconsistência mais comum observada foi porta de \textit{uplink} configurada
+    como \textit{access} em vez de \textit{trunk}, impedindo o tráfego tagged de
+    múltiplas VLANs. O comando \texttt{show interfaces trunk} confirma quais VLANs
+    estão efetivamente permitidas nos enlaces de tronco.
+
+    \item \textbf{DHCP relay} (\texttt{ip helper-address}): hosts em sub-redes
+    remotas não recebiam endereçamento quando o comando
+    \texttt{ip helper-address} estava ausente ou apontava para IP incorreto na
+    subinterface do roteador. A verificação foi realizada por \texttt{show
+    running-config} na interface correspondente e por teste de concessão DHCP com
+    \texttt{ipconfig /renew} nos hosts afetados.
+
+    \item \textbf{Modo de simulação do Packet Tracer:} utilizado para rastrear
+    o fluxo de pacotes DHCP Discover, OSPF Hello e requisições HTTP/IoT passo a
+    passo, permitindo identificar em qual equipamento o pacote era descartado e
+    correlacionar com a configuração de VLAN ou ACL responsável pelo bloqueio.
+
+    \item \textbf{Verificação de tabela MAC e VLAN:} o comando
+    \texttt{show mac address-table} foi empregado para confirmar que os endereços
+    MAC dos dispositivos IoT estavam aprendidos na VLAN correta pelos switches de
+    acesso, descartando problema de loop ou \textit{flooding} excessivo.
+\end{itemize}
+
+% =============================================================
+\section{Conclusão}
+% =============================================================
+
+O Projeto~2 da disciplina SSC0540 representa a maturação da infraestrutura de rede
+da Kodalabs, evoluindo de uma arquitetura de filiais independentes para um ambiente
+corporativo integrado, seguro e preparado para crescimento. As decisões técnicas
+documentadas neste relatório — OSPF multi-área, segmentação por VLANs, controle de
+acesso por ACLs e incorporação de IoT — não são fins em si mesmas, mas instrumentos
+a serviço dos objetivos de negócio da empresa.
+
+A adoção do OSPF multi-área garante que a comunicação entre Campinas, São Carlos e
+o Data Center seja resiliente e escalável: a adição de novas filiais não exige
+reconfiguração da topologia existente, e falhas de roteamento em uma área são
+isoladas sem impactar as demais. O Data Center compartilhado, operando como
+infraestrutura neutra na Área~0, centraliza serviços críticos sem favorecer
+nenhuma das filiais, o que simplifica tanto a manutenção quanto a eventual expansão
+para novas unidades.
+
+A segmentação por VLANs traduz a diversidade funcional da Kodalabs em política de
+rede: equipes técnicas com tráfego intensivo são isoladas de equipes administrativas,
+servidores críticos operam em segmento de acesso controlado, e visitantes jamais
+têm visibilidade sobre recursos internos. Esse modelo está diretamente alinhado com
+os requisitos de conformidade da LGPD, que exige controles técnicos documentáveis
+para proteção de dados pessoais tratados pela empresa.
+
+A infraestrutura IoT introduzida no Projeto~2 não é um componente acessório, mas
+uma extensão da gestão de riscos operacionais da Kodalabs. Sensores de fumaça,
+detectores de movimento e atuadores de ventilação endereçam ameaças reais ao
+ambiente físico onde opera a infraestrutura de dados da empresa. A proteção desses
+dispositivos por ACLs específicas demonstra que segurança não é uma camada
+adicionada ao final do projeto, mas um princípio que permeia cada decisão de
+arquitetura desde sua concepção.
+
+Como perspectivas de evolução futura, recomenda-se: a implementação de servidor
+DHCP secundário com failover automático para aumentar a resiliência dos serviços;
+a adoção de autenticação OSPF MD5 nos enlaces de backbone para proteção contra
+injeção de rotas fraudulentas; a expansão da infraestrutura IoT com sensores de
+temperatura integrados aos sistemas de ventilação para controle automatizado mais
+preciso; e a implementação de \textit{syslog} centralizado no Data Center para
+auditoria unificada de eventos de todas as áreas da rede.
+
+A Kodalabs encerra o Projeto~2 com uma infraestrutura que não apenas suporta suas
+operações atuais, mas está arquitetada para crescer com a empresa — mantendo
+segurança, rastreabilidade e desempenho como propriedades estruturais, não como
+adições pontuais.
+\newpage
+
+\nocite{*} % Este comando "força" o LaTeX a incluir todas as entradas do .bib na lista final
+
+\bibliographystyle{abntex2-num} % Ou o estilo que preferir (plain, alpha, etc.)
+\bibliography{ref}
+
+\end{document}

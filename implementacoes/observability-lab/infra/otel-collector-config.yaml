@@ -1,0 +1,126 @@
+# ============================================================================
+# OpenTelemetry Collector Configuration
+# ============================================================================
+#
+# O Collector é o hub central de telemetria. Ele recebe dados de todos os
+# serviços e os roteia para os backends apropriados.
+#
+# CONCEITO: Por que usar um Collector em vez de exportar diretamente?
+#
+#   1. DESACOPLAMENTO: Os serviços não precisam saber onde estão Jaeger,
+#      Prometheus, etc. Apenas enviam para o Collector.
+#
+#   2. RESILIÊNCIA: Se o Jaeger estiver fora, o Collector pode fazer buffer
+#      e retentar. Os serviços continuam funcionando.
+#
+#   3. PROCESSAMENTO: O Collector pode filtrar, transformar e enriquecer
+#      spans antes de exportar (ex: remover dados sensíveis).
+#
+#   4. MÚLTIPLOS BACKENDS: O mesmo pipeline pode exportar para Jaeger E
+#      Zipkin E qualquer outro backend sem mudar os serviços.
+#
+# Pipeline: Receivers → Processors → Exporters
+# ============================================================================
+
+receivers:
+  # OTLP via gRPC (porta 4317) — usado pelos serviços Python com SDK
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Métricas internas do próprio Collector (auto-observabilidade)
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "otel-collector"
+          scrape_interval: 10s
+          static_configs:
+            - targets: ["localhost:8888"]
+
+processors:
+  # Limita uso de memória do Collector
+  # Rejeita dados novos antes de usar mais de 80% do limite
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  # Agrupa spans/métricas em lotes antes de exportar (eficiência)
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  # Adiciona atributos de resource a todos os dados de telemetria
+  resource:
+    attributes:
+      - key: environment
+        value: "development"
+        action: insert
+      - key: lab.name
+        value: "observability-lab"
+        action: insert
+
+exporters:
+  # ---- Traces → Jaeger ----
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  # ---- Métricas → Prometheus ----
+  # CONCEITO: Prometheus Exporter do Collector
+  # O Collector expõe uma rota /metrics que o Prometheus faz scrape.
+  # Diferente do push (OTLP), aqui é pull — o Prometheus "puxa" as métricas.
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: "otel"
+    resource_to_telemetry_conversion:
+      enabled: true  # Converte resource attributes em labels Prometheus
+
+  # ---- Logs → Loki ----
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    tls:
+      insecure: true
+    default_labels_enabled:
+      exporter: false
+      job: true
+    labels:
+      attributes:
+        service.name: "service_name"
+        level: "level"
+
+  # Debug local (visível nos logs do container collector)
+  debug:
+    verbosity: normal
+
+service:
+  pipelines:
+    # Pipeline de Traces
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/jaeger, debug]
+
+    # Pipeline de Métricas
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, resource, batch]
+      exporters: [prometheus, debug]
+
+    # Pipeline de Logs
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [loki, debug]
+
+  # Observabilidade do próprio Collector
+  telemetry:
+    logs:
+      level: "warn"
+    metrics:
+      level: basic
+      address: 0.0.0.0:8888

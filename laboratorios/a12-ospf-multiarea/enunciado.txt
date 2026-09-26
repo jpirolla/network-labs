@@ -1,0 +1,63 @@
+Projeto de Aula – Roteamento com OSPF Multiárea
+
+Objetivo
+
+Implementar uma rede utilizando o protocolo de roteamento OSPF com múltiplas áreas, permitindo a comunicação entre diferentes segmentos de rede e a centralização do serviço de DHCP.
+
+Parte 1 – Topologia Inicial
+
+    Elaborar a topologia de rede conforme a figura anexa.
+    Configurar o protocolo OSPF utilizando três áreas:
+
+    Área 0;
+    Área 1;
+    Área 2.
+
+    Configurar os endereçamentos IP conforme indicado na topologia.
+    Garantir a conectividade entre todas as redes da topologia.
+    Validar o funcionamento do OSPF utilizando comandos de verificação, tais como:
+
+    show ip ospf neighbor
+    show ip ospf interface
+    show ip ospf database
+    show ip route
+
+    O servidor da rede 192.168.1.0/24 deverá possuir o endereço IP 192.168.1.2 e atuar como servidor DHCP e DNS.
+    A rede 192.168.2.0/24 deverá obter endereçamento IP automaticamente por meio do servidor DHCP em 192.168.1.2.
+    Configurar os roteadores necessários para permitir o encaminhamento de solicitações DHCP entre redes distintas.
+    Validar o acesso ao servidor Web (IP 192.168.1.2) e a resolução de nomes utilizando o servidor DNS (IP 192.168.1.66).
+
+Parte 2 – Expansão da Rede (Desafio)
+
+Para os alunos que concluírem a implementação da topologia inicial, deverá ser realizada uma expansão da rede com os seguintes requisitos:
+
+    Adicionar duas novas redes à topologia:
+
+    uma nova rede acima do Router3;
+    uma nova rede abaixo do Router2.
+
+    Cada nova rede deverá pertencer a uma nova área OSPF:
+
+    a rede acima do Router3 deverá ser configurada na Área 3;
+    a rede abaixo do Router2 deverá ser configurada na Área 4.
+
+    As novas áreas deverão se comunicar corretamente com todas as demais áreas por meio da Área 0.
+    Todas as novas redes deverão obter endereçamento IP automaticamente a partir do servidor DHCP centralizado no endereço 192.168.1.2.
+    Configurar os roteadores para permitir o encaminhamento de mensagens DHCP entre as áreas.
+
+    comunicação entre todas as redes;
+    propagação correta das rotas OSPF;
+    obtenção automática de IP em todas as áreas;
+    acesso ao servidor DHCP/DNS 192.168.1.2 a partir de qualquer rede da topologia.
+
+Material de Apoio
+
+Para auxiliar na elaboração do projeto, pode-se acessar o vídeo disponível em http://bit.ly/43QIWnQ
+
+Tabela de Produtos
+ID 	Produto 	Categoria 	Preço 	Estoque
+001 	Notebook Ultra X 	Informática 	R$ 3.499,90 	15 unidades
+002 	Mouse Sem Fio 	Acessórios 	R$ 89,90 	42 unidades
+003 	Teclado Mecânico 	Acessórios 	R$ 259,90 	4 unidades
+004 	Monitor 24" 	Periféricos 	R$ 799,90 	11 unidades
+005 	Headset Gamer 	Áudio 	R$ 199,90 	3 unidades

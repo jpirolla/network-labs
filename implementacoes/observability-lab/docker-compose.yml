@@ -1,0 +1,271 @@
+# ============================================================================
+# Docker Compose — Observability Lab
+# ============================================================================
+#
+# Ordem de inicialização (por depends_on):
+#   redis → otel-collector → jaeger, prometheus, loki
+#   → api-gateway, service-a, service-b, worker
+#   → grafana
+#
+# Portas expostas ao host:
+#   8000  — API Gateway (seu ponto de entrada)
+#   8001  — Service A (acesso direto para debug)
+#   8002  — Service B (acesso direto para debug)
+#   16686 — Jaeger UI
+#   9090  — Prometheus UI
+#   3000  — Grafana UI (admin/admin)
+#   3100  — Loki (interno)
+#   4317  — OTel Collector gRPC
+#   4318  — OTel Collector HTTP
+# ============================================================================
+
+version: "3.9"
+
+networks:
+  observability:
+    driver: bridge
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  loki_data: {}
+
+# ---------------------------------------------------------------------------
+# Template comum de variáveis OTel para os serviços Python
+# ---------------------------------------------------------------------------
+
+x-otel-env: &otel-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+  ENVIRONMENT: development
+
+services:
+
+  # ==========================================================================
+  # INFRASTRUCTURE LAYER
+  # ==========================================================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: obs-redis
+    networks: [observability]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # --------------------------------------------------------------------------
+  # OTel Collector — Hub Central de Telemetria
+  # --------------------------------------------------------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.99.0
+    container_name: obs-otel-collector
+    networks: [observability]
+    volumes:
+      - ./infra/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Métricas internas do Collector
+      - "8889:8889"   # Prometheus exporter do Collector
+    depends_on:
+      - jaeger
+      - loki
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:13133/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------------------------------
+  # Jaeger — Visualizador de Traces
+  # --------------------------------------------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: obs-jaeger
+    networks: [observability]
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317"         # OTLP gRPC (interno para o Collector)
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------------------------------
+  # Prometheus — Backend de Métricas
+  # --------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: obs-prometheus
+    networks: [observability]
+    volumes:
+      - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.enable-lifecycle"   # Permite reload via POST /-/reload
+    restart: unless-stopped
+
+  # --------------------------------------------------------------------------
+  # Loki — Backend de Logs
+  # --------------------------------------------------------------------------
+  loki:
+    image: grafana/loki:2.9.6
+    container_name: obs-loki
+    networks: [observability]
+    volumes:
+      - ./infra/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/tmp/loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # --------------------------------------------------------------------------
+  # Grafana — Plataforma de Visualização
+  # --------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: obs-grafana
+    networks: [observability]
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_FEATURE_TOGGLES_ENABLE: "traceToMetrics,correlations"
+    depends_on:
+      - prometheus
+      - jaeger
+      - loki
+    restart: unless-stopped
+
+  # ==========================================================================
+  # APPLICATION LAYER
+  # ==========================================================================
+
+  # --------------------------------------------------------------------------
+  # API Gateway
+  # --------------------------------------------------------------------------
+  api-gateway:
+    build:
+      context: ./services
+      dockerfile: api-gateway/Dockerfile
+    container_name: obs-api-gateway
+    networks: [observability]
+    environment:
+      <<: *otel-env
+      SERVICE_NAME: api-gateway
+      SERVICE_A_URL: http://service-a:8001
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/shared:/app/shared:ro  # Hot-reload do shared module
+    depends_on:
+      otel-collector:
+        condition: service_healthy
+      service-a:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------------------------------
+  # Service A — Order Processor
+  # --------------------------------------------------------------------------
+  service-a:
+    build:
+      context: ./services
+      dockerfile: service-a/Dockerfile
+    container_name: obs-service-a
+    networks: [observability]
+    environment:
+      <<: *otel-env
+      SERVICE_NAME: service-a
+      SERVICE_B_URL: http://service-b:8002
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./services/shared:/app/shared:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_healthy
+      service-b:
+        condition: service_started
+    restart: unless-stopped
+
+  # --------------------------------------------------------------------------
+  # Service B — External Simulator (Chaos)
+  # --------------------------------------------------------------------------
+  service-b:
+    build:
+      context: ./services
+      dockerfile: service-b/Dockerfile
+    container_name: obs-service-b
+    networks: [observability]
+    environment:
+      <<: *otel-env
+      SERVICE_NAME: service-b
+      # Ajuste estas variáveis para mudar o comportamento caótico:
+      ERROR_RATE: "0.20"       # 20% de erros
+      TIMEOUT_RATE: "0.10"     # 10% de timeouts
+      MIN_LATENCY_MS: "100"
+      MAX_LATENCY_MS: "2000"
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./services/shared:/app/shared:ro
+    depends_on:
+      otel-collector:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --------------------------------------------------------------------------
+  # Worker — Async Task Consumer
+  # --------------------------------------------------------------------------
+  worker:
+    build:
+      context: ./services
+      dockerfile: worker/Dockerfile
+    container_name: obs-worker
+    networks: [observability]
+    environment:
+      <<: *otel-env
+      SERVICE_NAME: worker
+      REDIS_URL: redis://redis:6379
+      WORKER_ID: worker-1
+    volumes:
+      - ./services/shared:/app/shared:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_healthy
+    restart: unless-stopped

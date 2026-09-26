@@ -1,0 +1,14 @@
+nternet das Coisas (IoT)
+Condições de conclusão
+Aberto: sexta-feira, 22 mai. 2026, 00:00
+Vencimento: sexta-feira, 22 mai. 2026, 21:00
+
+1) Implemente o projeto do vídeo em http://bit.ly/3GVTHMd e monte o servidor DNS depois de replicar o projeto do vídeo
+
+2) Subsequentemente, divida a rede em duas partes: uma do servidor e a outra da IoT
+
+3) O roteamento entre as redes deve ser por OSPF
+
+4) Um único servidor DHCP deve distribuir os endereços entre as redes
+
+5) Submeter a versão completa nesta tarefa

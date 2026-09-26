@@ -1,0 +1,31 @@
+    Desenvolver a rede local (LAN) conforme a topologia apresentada na ilustração anexa, utilizando o simulador de redes.
+
+    Assistir ao vídeo explicativo disponível no seguinte link:
+    http://bit.ly/4ukOFgm
+
+    Implementar na rede todos os serviços apresentados no vídeo, incluindo DHCP, e-mail e DNS.
+
+    Após concluir as configurações demonstradas no vídeo, adicionar um laptop adicional à rede sem fio já existente.
+
+    Realizar o balanceamento das funções dos servidores, distribuindo os serviços da seguinte forma:
+
+a) Servidor 1: serviços HTTP e DNS
+b) Servidor 2: serviços DHCP e e-mail
+
+    Configurar corretamente o serviço de DNS do servidor de e-mail, garantindo a resolução adequada de nomes necessária ao funcionamento do serviço.
+
+    Para o servidor web, utilize o index.html em anexo
+
+    Após a implementação completa da rede, submeter o arquivo do projeto gerado pelo simulador no formato .pkt.
+
+    Submeter o projeto com o desenvolvimento alcançado até o final da aula.
+
+    Por último, mas não o menos importante: a resolução de problemas (troubleshooting) faz parte do processo de desenvolvimento e constitui uma etapa essencial da atividade.
+
+Tabela de Produtos
+ID 	Produto 	Categoria 	Preço 	Estoque
+001 	Notebook Ultra X 	Informática 	R$ 3.499,90 	15 unidades
+002 	Mouse Sem Fio 	Acessórios 	R$ 89,90 	42 unidades
+003 	Teclado Mecânico 	Acessórios 	R$ 259,90 	4 unidades
+004 	Monitor 24" 	Periféricos 	R$ 799,90 	11 unidades
+005 	Headset Gamer 	Áudio 	R$ 199,90 	3 unidades

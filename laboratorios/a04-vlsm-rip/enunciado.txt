@@ -1,0 +1,106 @@
+Instituto de Ciências Matemáticas e de Computação - ICMC/USP
+Redes de Computadores
+Prática II
+Prof. Jó Ueyama
+Nome: _________________________________________________________________________
+No. USP: __________________________
+Observações:
+a) As respostas deste exercício devem ser submetidas até no final da aula
+b) Submeter as respostas até o ponto que você conseguiu resolver
+c) A submissão deve ser feita exclusivamente pela plataforma Moodle
+d) Esta atividade é individual
+Exercício 1 — Inspecionando cabeçalhos HTTP
+Execute:
+curl -I -v https://www.icmc.usp.br
+Perguntas:
+• Qual versão do HTTP foi utilizada (HTTP/1.1 ou HTTP/2)?
+• O servidor retornou 200 OK?
+Exercício 2 — Comparação HTTP/1.1 vs HTTP/2
+Execute:
+curl --http1.1 -w "HTTP1.1: %{time_total}s\n" -o /dev/null -s
+https://www.google.com
+curl --http2 -w "HTTP2: %{time_total}s\n" -o /dev/null -s
+https://www.google.com
+Perguntas:
+• Qual versão foi mais rápida?
+• A diferença foi significativa?
+• Por que o HTTP/2 tende a ser mais eficiente?
+Exercício 3 — Testando múltiplas requisições
+Instituto de Ciências Matemáticas e de Computação - ICMC/USP
+Execute:
+curl --http1.1 -o /dev/null -s -w "HTTP/1.1 Time: %{time_total}s\n"
+https://www.google.com https://www.google.com
+curl --http2 -o /dev/null -s -w "HTTP/2 Time: %{time_total}s\n"
+https://www.google.com https://www.google.com
+Perguntas:
+• Qual protocolo apresentou melhor desempenho com múltiplas requisições?
+• Como isso se relaciona com multiplexação?
+• Por que o HTTP/1.1 pode sofrer com Head-of-Line Blocking?
+Exercício 4 — Criando e armazenando cookies
+Execute:
+curl -i -c cookies.txt "https://httpbin.org/response-headers?Set-
+Cookie=usuario=joao"
+Perguntas:
+• Qual header HTTP é retornado pelo servidor?
+• O que foi armazenado no arquivo cookies.txt?
+Exercício 5 — Enviando cookies ao servidor
+Execute:
+curl -i -b cookies.txt https://httpbin.org/cookies
+Perguntas:
+• O cookie foi enviado corretamente?
+• Qual informação aparece na resposta?
+Exercício 6 — Requisição HTTP manual (porta 80)
+Execute:
+nc example.com 80
+Depois digite:
+Instituto de Ciências Matemáticas e de Computação - ICMC/USP
+GET / HTTP/1.1
+Host: example.com
+Connection: close
+Perguntas:
+• O que o servidor retorna?
+• Você consegue identificar o código de status HTTP?
+Exercício 7 — Requisição HTTPS manual (porta 443)
+Execute:
+echo -e "GET / HTTP/1.1\r\nHost: www.uol.com.br\r\nConnection: close\r\n\r\n" |
+openssl s_client -connect www.uol.com.br:443 -quiet
+Perguntas:
+• O conteúdo retornado é legível?
+• Por que precisamos do openssl s_client em vez do nc?
+• Qual a principal diferença entre HTTP e HTTPS?
+Exercício 8 — Interpretação de códigos HTTP
+Com base nos exercícios anteriores:
+Perguntas:
+• Qual o significado de:
+o 200 OK
+o 404 Not Found
+• Em que situações cada um ocorre?
+• O curl mostra o corpo da resposta nesses casos?
+Exercício 9 — Verificação de modificação da página
+(Wikipedia)
+Você deseja verificar se a página inicial da Wikipedia foi modificada recentemente.
+Execute:
+curl -I https://www.wikipedia.org
+Instituto de Ciências Matemáticas e de Computação - ICMC/USP
+Perguntas:
+• A página foi trazida do servidor hoje?
+• Qual é o valor do campo Last-Modified?
+• A página parece recente?
+Exercício 10 — Requisição condicional com If-Modified-Since
+Execute:
+curl -I -H "If-Modified-Since: Sat, 14 Mar 2026 15:00:00 GMT"
+https://www.wikipedia.org
+Perguntas:
+• O servidor retornou HTTP/2 304 Not Modified ou 200 OK?
+• O que isso indica sobre a página?
+Exercício 11 — Interpretação do GET condicional
+Perguntas:
+• O que significa:
+• HTTP/2 304 Not Modified
+• Em que situação o cliente evita baixar o conteúdo?
+• Qual a vantagem disso em termos de desempenho e uso de rede?
+Exercício 12 — Peer to Peer
+Por que o tempo para a distribuição de conteúdo não cresce linearmente em redes P2P? O N (no
+gráfico abaixo) é o número de hospedeiros que recebem o conteúdo. Por que o tempo é
+constante no cliente-servidor?
+Instituto de Ciências Matemáticas e de Computação - ICMC/USP
