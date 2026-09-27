@@ -2,8 +2,6 @@ Redes de Computadores e Infraestrutura
 
 Repositório com atividades práticas, laboratórios e projetos desenvolvidos durante a graduação em **Ciências da Computação** no ICMC/USP, no âmbito da disciplina **SSC0540 — Redes de Computadores** (2026, Prof. Jó Ueyama).
 
-O material reúne desde laboratórios introdutórios de configuração de redes até projetos completos de infraestrutura corporativa WAN, passando por implementações em Python de protocolos e ferramentas de observabilidade.
-
 ---
 
 ## Organização do repositório
@@ -97,16 +95,12 @@ Stack completa de **observabilidade distribuída**: rastreamento com OpenTelemet
 | a13 | [VLANs](./laboratorios/a13-vlans/) | IEEE 802.1Q, Switch L2/L3, DHCP |
 | a14 | [IoT + OSPF](./laboratorios/a14-iot-ospf/) | IoT, OSPF, segmentação de redes |
 | a15 | [OSPFv3 com IPv6](./laboratorios/a15-ospfv3-ipv6/) | IPv6, OSPFv3 multi-área, CLI IOS |
-| a16 | [BGP entre ASes](./laboratorios/a16-bgp/) | BGP, Sistemas Autônomos |
+
 
 ---
 
 ## Sobre o repositório
 
 - **Disciplina:** SSC0540 — Redes de Computadores
-- **Instituição:** ICMC — Universidade de São Paulo (USP), São Carlos
 - **Simulador:** Cisco Packet Tracer (arquivos `.pkt`)
 - **Linguagens:** Python, LaTeX, IOS CLI (Cisco)
-- **Tipo de material:** atividades acadêmicas e laboratórios práticos
-
-> Este repositório documenta aprendizado acadêmico e prático. O conteúdo reflete conceitos estudados e implementados durante a graduação, não experiência profissional.
