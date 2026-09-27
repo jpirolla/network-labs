@@ -24,5 +24,5 @@ Atividade de mesma especificação que o [a03](../a03-interconexao-redes/), real
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação da atividade |
+| `enunciado.md` | Especificação da atividade |
 | `projeto3_27mar.pkt` | Implementação no Cisco Packet Tracer |

@@ -55,5 +55,5 @@ interface gig 0/0/0
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Roteiro completo com comandos CLI para os 3 roteadores |
+| `enunciado.md` | Roteiro completo com comandos CLI para os 3 roteadores |
 | `aula19jun.pkt` | Implementação OSPFv3 IPv6 no Packet Tracer |

@@ -38,6 +38,6 @@ Responder questões conceituais sobre os três principais protocolos de roteamen
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Questões da atividade |
+| `enunciado.md` | Questões da atividade |
 | `resolucao.txt` | Resolução escrita das 6 questões |
 | `slides-aula.pdf` | Slides da aula sobre RIP, OSPF e BGP |

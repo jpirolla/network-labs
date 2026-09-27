@@ -28,5 +28,5 @@ Implementar uma LAN com múltiplos servidores, distribuindo serviços de rede en
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação da atividade |
+| `enunciado.md` | Especificação da atividade |
 | `pratica_lab_http.pdf` | Material de apoio do laboratório |

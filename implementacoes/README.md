@@ -8,7 +8,7 @@ Projetos com implementação em código desenvolvidos como complemento ou extens
 
 | Projeto | Conceito central | Linguagem | Ferramentas |
 |---------|-----------------|-----------|-------------|
-| [transport-mux-lab](./transport-mux-lab/) | Multiplexação/demultiplexação na camada de transporte | Python | Sockets, select(), Docker, Prometheus, Grafana |
+| [transport-mux-lab](../transport-mux-lab/) | Multiplexação/demultiplexação na camada de transporte | Python | Sockets, select(), Docker, Prometheus, Grafana |
 | [dns-tracer-lab](./dns-tracer-lab/) | Protocolo DNS em wire format (RFC 1035) | Python | Sockets UDP, struct.pack |
 | [observability-lab](./observability-lab/) | Observabilidade distribuída com OpenTelemetry | Python | FastAPI, Docker, Jaeger, Prometheus, Grafana, Loki |
 

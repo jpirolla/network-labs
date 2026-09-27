@@ -29,5 +29,5 @@ O servidor (IP fixo `192.168.1.2`) centraliza os serviços: **DHCP**, **DNS** e 
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação completa da atividade |
+| `enunciado.md` | Especificação completa da atividade |
 | `lab1_dns_http_dhcp.pkt` | Implementação no Cisco Packet Tracer |

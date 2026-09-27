@@ -1,5 +1,0 @@
-I. Elabore dois projetos VLANs seguindo os exemplos das videoaulas
-1) VLANs (Switch L2) com DHCP no Roteador - link http://bit.ly/44w7wKV
-2) VLANs (Switch L3) com DHCP - link https://bit.ly/452Nc41
-
-3) Implementar o servidor DNS e inseri-lo no projeto

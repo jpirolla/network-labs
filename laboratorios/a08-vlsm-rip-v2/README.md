@@ -25,4 +25,4 @@ Esta atividade não possui arquivo `.pkt` — apenas o enunciado foi preservado.
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação (VLSM + RIP v2 + desafio LAN 3) |
+| `enunciado.md` | Especificação (VLSM + RIP v2 + desafio LAN 3) |

@@ -49,6 +49,6 @@ show ip route
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação completa (Parte 1 + Desafio) |
+| `enunciado.md` | Especificação completa (Parte 1 + Desafio) |
 | `ospf1.pkt` | Implementação OSPF multi-área no Packet Tracer |
 | `lab-19mai.zip` | Material complementar do laboratório |

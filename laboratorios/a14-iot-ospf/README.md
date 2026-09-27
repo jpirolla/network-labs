@@ -30,5 +30,5 @@ Implementar uma rede com dispositivos **IoT** integrados a uma topologia com **O
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação da atividade |
+| `enunciado.md` | Especificação da atividade |
 | `iot.pkt` | Implementação com IoT + OSPF + DHCP |

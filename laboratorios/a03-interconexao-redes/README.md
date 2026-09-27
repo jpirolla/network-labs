@@ -34,5 +34,5 @@ Projetar e implementar uma infraestrutura com **duas sub-redes distintas** inter
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação completa (topologia, endereçamento, serviços) |
+| `enunciado.md` | Especificação completa (topologia, endereçamento, serviços) |
 | `pratica2.pkt` | Implementação no Cisco Packet Tracer |

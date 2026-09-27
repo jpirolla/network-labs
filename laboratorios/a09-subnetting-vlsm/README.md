@@ -41,5 +41,5 @@ O domínio de VLSM é essencial para:
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação com requisitos de sub-redes |
+| `enunciado.md` | Especificação com requisitos de sub-redes |
 | `10abril_projeto4.pkt` | Implementação no Cisco Packet Tracer |

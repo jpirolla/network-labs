@@ -46,6 +46,6 @@ A análise de pacotes DNS com Wireshark é uma técnica fundamental para:
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação da atividade (perguntas sobre pacotes DNS) |
+| `enunciado.md` | Especificação da atividade (perguntas sobre pacotes DNS) |
 | `roteiro-wireshark.txt` | Roteiro completo do Wireshark DNS Lab (inclui questões e metodologia) |
 | `Wireshark_DNS_v8.0-2.pdf` | Material oficial do Wireshark DNS Lab (v8.0) |

@@ -37,5 +37,5 @@ Implementar dois projetos de VLANs com abordagens distintas (Switch L2 e Switch 
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação dos três projetos |
+| `enunciado.md` | Especificação dos três projetos |
 | `lab-19mai/` | Arquivos `.pkt` do laboratório (lab-19mai.pkt e lab-19mai-pt2.pkt) |

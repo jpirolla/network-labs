@@ -10,9 +10,10 @@ O material reúne desde laboratórios introdutórios de configuração de redes 
 
 ```
 network-labs/
+├── transport-mux-lab/  → Laboratório de multiplexação na camada de transporte
 ├── laboratorios/       → 16 atividades práticas da disciplina SSC0540
 ├── projetos/           → 2 projetos acadêmicos completos (Rede Corporativa Kodalabs)
-└── implementacoes/     → 3 implementações com código Python
+└── implementacoes/     → Implementações em código Python (DNS Tracer, Observabilidade)
 ```
 
 ---
@@ -64,7 +65,7 @@ Implementa infraestrutura WAN com: VLAN, VLSM, OSPF, Router-on-a-Stick, DHCP rel
 ### [`projetos/projeto2-wan-multiarea`](./projetos/projeto2-wan-multiarea/)
 Evolução do Projeto 1: **OSPF multi-área** (Área 0/1/2, ABR), **Data Center privado** centralizado e integração com **IoT**. Inclui relatório técnico com justificativas de segmentação por VLAN e análise de viabilidade financeira.
 
-### [`implementacoes/transport-mux-lab`](./implementacoes/transport-mux-lab/)
+### [`transport-mux-lab`](./transport-mux-lab/)
 Implementação Python que torna observável o comportamento da **camada de transporte**: múltiplos fluxos TCP simultâneos, `select()` para I/O multiplexing, métricas no Prometheus e dashboards no Grafana.
 
 ### [`implementacoes/dns-tracer-lab`](./implementacoes/dns-tracer-lab/)

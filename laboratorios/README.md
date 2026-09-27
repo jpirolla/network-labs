@@ -5,7 +5,7 @@ Atividades práticas realizadas durante a disciplina **SSC0540 — Redes de Comp
 As atividades utilizam o simulador **Cisco Packet Tracer** (arquivos `.pkt`) e cobrem progressivamente os conceitos fundamentais de redes de computadores, do endereçamento básico até protocolos de roteamento avançados.
 
 Cada pasta contém:
-- `enunciado.txt` — especificação original da atividade
+- `enunciado.md` — especificação original da atividade
 - `*.pkt` — implementação no Cisco Packet Tracer (quando aplicável)
 - `*.pdf` — material de apoio ou roteiro (quando disponível)
 - `README.md` — descrição da atividade e conceitos praticados

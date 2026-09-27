@@ -37,6 +37,6 @@ network 192.168.1.0
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação da atividade (VLSM + RIP v2) |
+| `enunciado.md` | Especificação da atividade (VLSM + RIP v2) |
 | `resolucao-protocolos.txt` | Resolução escrita do questionário sobre RIP/OSPF/BGP |
 | `pratica_lab_http.pdf` | Material de apoio do laboratório |

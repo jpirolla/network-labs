@@ -20,5 +20,5 @@ Segunda iteração do exercício de subnetting com VLSM. Mesma especificação d
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `enunciado.txt` | Especificação da atividade |
+| `enunciado.md` | Especificação da atividade |
 | `08_mai.pkt` | Implementação no Cisco Packet Tracer |
