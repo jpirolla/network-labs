@@ -1,4 +1,4 @@
-Redes de Computadores e Infraestrutura
+# Redes de Computadores e Infraestrutura
 
 Repositório com atividades práticas, laboratórios e projetos desenvolvidos durante a graduação em **Ciências da Computação** no ICMC/USP, no âmbito da disciplina **SSC0540 — Redes de Computadores** (2026, Prof. Jó Ueyama).
 
